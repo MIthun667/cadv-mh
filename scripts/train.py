@@ -10,7 +10,7 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 from transformers import AutoTokenizer
 
-from _common import ROOT, json_write, resolve_dataset_path
+from _common import ROOT, json_write, manifest_path as config_manifest_path, resolve_dataset_path, run_root
 from cadvmh.data.loader import load_dataset
 from cadvmh.data.preprocessing import conservative_augment
 from cadvmh.data.tokenization import special_token_mask
@@ -20,6 +20,8 @@ from cadvmh.models import CADVMH
 from cadvmh.training.checkpoints import load_checkpoint, save_checkpoint
 from cadvmh.training.optimizer import build_optimizer
 from cadvmh.training.seeds import seed_everything
+from cadvmh.training.ablations import ABLATIONS
+from cadvmh.training.schedules import encoder_learning_rate, temperature_for
 from cadvmh.training.stages import configure_stage
 from cadvmh.training.trainer import Trainer
 from cadvmh.utils.config import load_config
@@ -71,27 +73,21 @@ def main() -> None:
     config_path = args.config or str(ROOT / "configs" / f"{args.dataset}.yaml")
     config = load_config(config_path)
     config["project"]["seed"] = args.seed
-    ablation_modes = {
-        "A0": (1, "full", {"necessity": 0, "sufficiency": 0, "sparsity": 0, "continuity": 0, "consistency": 0}),
-        "A1": (None, "evidence", {"necessity": 0, "sufficiency": 1, "continuity": 0, "consistency": 0}),
-        "A2": (None, "mean", {"necessity": 0, "sufficiency": 0, "continuity": 0, "consistency": 0}),
-        "A3": (None, "mean", {"sufficiency": 0, "continuity": 0, "consistency": 0}),
-        "A4": (None, "mean", {"continuity": 0, "consistency": 0}),
-        "A5": (None, "full", {"continuity": 0, "consistency": 0}),
-        "A6": (None, "full", {"consistency": 0}),
-        "A7": (None, "full", {}),
-        "A8": (None, "full", {}),
-    }
-    forced_stage, fusion_mode = None, "full"
+    forced_stage, fusion_mode, spec = None, "full", None
     if args.ablation:
-        forced_stage, fusion_mode, changes = ablation_modes[args.ablation]
-        config["loss"].update(changes)
+        spec = ABLATIONS[args.ablation]
+        fusion_mode = spec.fusion_mode
+        config["loss"].update(spec.loss_overrides)
+        if spec.stages == (1,):
+            forced_stage = 1
+        if spec.alias_of_canonical_run and not args.output_dir:
+            print("A8 is the canonical full model; writing to the canonical cadvmh run directory.")
     for loss_name in args.disable_loss or []:
         config["loss"][loss_name] = 0.0
     if args.fusion_mode:
         fusion_mode = args.fusion_mode
     source = resolve_dataset_path(config)
-    manifest_path = ROOT / "prepared" / args.dataset / "primary_split.csv"
+    manifest_path = config_manifest_path(config)
     if not manifest_path.exists():
         raise FileNotFoundError(f"Prepare the immutable split first: {manifest_path}")
     manifest = pd.read_csv(manifest_path)
@@ -102,7 +98,8 @@ def main() -> None:
         raise RuntimeError("Current dataset does not match the split manifest")
     labels = config["dataset"]["labels"]
     counts = frame.loc[frame.partition == "train", "label"].value_counts().reindex(labels, fill_value=0).tolist()
-    summary = {"dataset": args.dataset, "rows": len(frame), "partitions": frame.partition.value_counts().to_dict(), "train_class_counts": dict(zip(labels, counts)), "config": config_path}
+    summary = {"dataset": args.dataset, "rows": len(frame), "partitions": frame.partition.value_counts().to_dict(), "train_class_counts": dict(zip(labels, counts)), "config": config_path,
+               "encoding": frame.attrs.get("encoding"), "ablation": args.ablation, "selection_mode": config["model"]["selection_mode"]}
     if args.dry_run:
         partitions = summary["partitions"]
         print(
@@ -119,7 +116,7 @@ def main() -> None:
         len(labels), config["model"]["encoder_name"],
         selector_hidden_dim=config["model"]["selector_hidden_dim"],
         interaction_dim=config["model"]["interaction_dim"],
-        dropout=config["model"]["selector_dropout"],
+        dropout=config["model"]["dropout"],
         gradient_checkpointing=config["model"]["gradient_checkpointing"],
     )
     class_weights = effective_number_weights(counts, config["training"]["beta"])
@@ -128,8 +125,10 @@ def main() -> None:
     # Non-weight loss settings are not LossWeights fields.
     objective.necessity_margin = config["loss"]["necessity_margin"]
     objective.selection_ratio = config["model"]["selection_ratio"]
+    selection_mode = config["model"]["selection_mode"]
+    selection_ratio = config["model"]["selection_ratio"]
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    run_dir = Path(args.output_dir) if args.output_dir else ROOT / "experiments" / args.dataset / "cadvmh" / f"seed_{args.seed}"
+    run_dir = Path(args.output_dir) if args.output_dir else run_root(config) / args.dataset / "cadvmh" / f"seed_{args.seed}"
     if run_dir.exists() and not args.resume:
         existing_entries = {path.name for path in run_dir.iterdir()}
         reusable_failed_run_entries = {"run_metadata.json"}
@@ -146,29 +145,41 @@ def main() -> None:
     final_stage = stages[-1]
     for stage in stages:
         configure_stage(model, stage)
-        optimizer = build_optimizer(model, config["training"]["stage3_encoder_learning_rate"], config["training"]["selector_learning_rate"], config["training"]["module_learning_rate"], config["training"]["weight_decay"])
-        trainer = Trainer(model, objective, optimizer, device, config["training"]["gradient_accumulation"], config["training"]["gradient_clip"], config["training"]["fp16"], fusion_mode)
+        training = config["training"]
+        optimizer = build_optimizer(model, encoder_learning_rate(stage, training["encoder_learning_rate"], training["stage3_encoder_learning_rate"]), training["selector_learning_rate"], training["module_learning_rate"], training["weight_decay"])
+        trainer = Trainer(model, objective, optimizer, device, training["gradient_accumulation"], training["gradient_clip"], training["fp16"], fusion_mode, selection_mode, selection_ratio)
         if args.resume:
             resumed = load_checkpoint(args.resume, model, optimizer=optimizer, scaler=trainer.scaler)
             if int(resumed["stage"]) != stage:
                 raise ValueError(f"Resume checkpoint stage {resumed['stage']} does not match requested stage {stage}")
             args.resume = None
         epochs = config["training"][f"stage{stage}_epochs"]
+        if spec is not None and spec.matched_encoder_epochs and stage == 1:
+            # A0: same total number of encoder-training epochs as the full model (stage 1 + stage 3).
+            epochs = config["training"]["stage1_epochs"] + config["training"]["stage3_epochs"]
+        # Stage 1 has no selector; stage 2's selection metric is the aux-head selector score (see docs/repair_plan.md R2).
+        selection_key = "validation_selector_score" if stage == 2 else "validation_macro_f1"
         stage_best = float("-inf")
         stage_best_epoch = 0
         stage_best_state = None
         stale_epochs = 0
         for epoch in range(1, epochs + 1):
-            temperature = config["model"]["temperature_initial"] if stage < 2 or args.ablation == "A7" else max(config["model"]["temperature_final"], config["model"]["temperature_initial"] - (epoch - 1) * 0.1)
+            temperature = temperature_for(
+                stage, epoch, training["stage2_epochs"], training["stage3_epochs"],
+                config["model"]["temperature_initial"], config["model"]["temperature_final"],
+                fixed=bool(spec and spec.fixed_temperature),
+            )
             record = {
                 "stage": stage,
                 "epoch": epoch,
+                "temperature": temperature,
+                "selection_key": selection_key,
                 **trainer.train_epoch(loaders["train"], stage, temperature, tokenizer.mask_token_id, args.max_train_batches),
                 **trainer.evaluate(loaders["validation"], stage, tokenizer.mask_token_id, args.max_eval_batches),
             }
             append_jsonl(run_dir / "history.jsonl", record)
-            if record["validation_macro_f1"] > stage_best:
-                stage_best = record["validation_macro_f1"]
+            if record[selection_key] > stage_best:
+                stage_best = record[selection_key]
                 stage_best_epoch = epoch
                 stage_best_state = {
                     name: parameter.detach().cpu().clone()
@@ -181,6 +192,7 @@ def main() -> None:
                 f"Stage {stage}, epoch {epoch}: "
                 f"train macro-F1 {record['train_macro_f1']:.4f}, "
                 f"validation macro-F1 {record['validation_macro_f1']:.4f}, "
+                f"{selection_key} {record[selection_key]:.4f}, "
                 f"validation loss {record['validation_loss']:.4f}, "
                 f"runtime {record['runtime_seconds'] / 60:.1f} min."
             )
@@ -200,7 +212,7 @@ def main() -> None:
                 label_mapping={v: i for i, v in enumerate(labels)},
                 split_fingerprint=split_fingerprint,
             )
-        print(f"Stage {stage} complete. Best validation macro-F1: {stage_best:.4f}.")
+        print(f"Stage {stage} complete. Best {selection_key}: {stage_best:.4f}.")
     print(f"Training complete. Best checkpoint: {run_dir / 'best.pt'}")
 
 

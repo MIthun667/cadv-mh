@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
 from tqdm.auto import tqdm
 
-from _common import ROOT, json_write, resolve_dataset_path
+from _common import ROOT, json_write, manifest_path, resolve_dataset_path, run_root
 from cadvmh.data.loader import load_dataset
 from cadvmh.evaluation.metrics import classification_metrics
 from cadvmh.models import CADVMH
@@ -32,7 +32,7 @@ def main() -> None:
     config = load_config(ROOT / "configs" / f"{args.dataset}.yaml")
     config["dataset"]["path"] = str(resolve_dataset_path(config))
     frame, _ = load_dataset(config["dataset"], config["data"].get("encoding", "utf-8"))
-    manifest = pd.read_csv(ROOT / "prepared" / args.dataset / "primary_split.csv")
+    manifest = pd.read_csv(manifest_path(config))
     frame = frame.merge(manifest[["sample_id", "partition"]], on="sample_id", validate="one_to_one")
     frame = frame.loc[frame.partition == args.partition]
     labels = config["dataset"]["labels"]
@@ -65,7 +65,7 @@ def main() -> None:
             probabilities.append(torch.softmax(output.final_logits, -1).cpu().numpy())
             targets.extend(batch["labels"].tolist())
     metrics = classification_metrics(np.asarray(targets), np.concatenate(probabilities), labels)
-    destination = args.output or str(ROOT / "experiments" / args.dataset / "evaluation" / f"{args.partition}_metrics.json")
+    destination = args.output or str(run_root(config) / args.dataset / "evaluation" / f"{args.partition}_metrics.json")
     json_write(ROOT / destination if not str(destination).startswith("/") else __import__('pathlib').Path(destination), metrics)
     print(f"Evaluation complete. Macro-F1: {metrics['macro_f1']:.4f}.")
     print(f"Metrics saved to: {destination}")

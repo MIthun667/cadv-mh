@@ -8,4 +8,5 @@ dataset:
   labels: [anxiety, depression, suicidal, neutral, casual]
   label_aliases:
     suicide: suicidal
-  experiment_root: experiments/dataset_a
+  encoding: latin-1            # file is not valid UTF-8; C1 control residue is stripped and counted
+  manifest: prepared/dataset_a/primary_split_v2.csv

@@ -9,4 +9,5 @@ dataset:
   label_aliases:
     "0": ocd
     "1": adhd
-  experiment_root: experiments/dataset_b
+  encoding: utf-8              # file is valid UTF-8 (latin1 produced mojibake in 31% of posts)
+  manifest: prepared/dataset_b/primary_split_v2.csv

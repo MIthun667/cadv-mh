@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import argparse
 
-from _common import ROOT, resolve_dataset_path
+from _common import ROOT, manifest_path, resolve_dataset_path
 from cadvmh.data.deduplication import assign_exact_groups, deduplicate_representatives
 from cadvmh.data.loader import load_dataset
 from cadvmh.data.splitting import dataset_fingerprint, group_stratified_split, save_manifest
@@ -32,7 +32,7 @@ def main() -> None:
     )
     if args.dry_run:
         return
-    destination = ROOT / "prepared" / args.dataset / "primary_split.csv"
+    destination = manifest_path(config)
     save_manifest(
         manifest,
         destination,
@@ -40,6 +40,8 @@ def main() -> None:
             "dataset": args.dataset,
             "dataset_sha256": dataset_fingerprint(source),
             "split_seed": config["data"]["split_seed"],
+            "encoding": frame.attrs.get("encoding"),
+            "c1_controls_removed": frame.attrs.get("c1_controls_in_raw"),
             "deduplication": "canonical exact groups; conflicting groups excluded; one representative per group",
             "actual_partition_counts": manifest.partition.value_counts().to_dict(),
         },

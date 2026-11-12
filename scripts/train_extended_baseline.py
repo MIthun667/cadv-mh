@@ -13,7 +13,7 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
-from _common import ROOT, json_write, resolve_dataset_path
+from _common import ROOT, json_write, manifest_path, resolve_dataset_path, run_root
 from cadvmh.baselines.neural import BiLSTMClassifier, SparseRationalizer
 from cadvmh.data.loader import load_dataset
 from cadvmh.evaluation.metrics import classification_metrics
@@ -36,7 +36,7 @@ def load_partitions(dataset: str):
     config = load_config(ROOT / "configs" / f"{dataset}.yaml")
     config["dataset"]["path"] = str(resolve_dataset_path(config))
     frame, _ = load_dataset(config["dataset"], config["data"].get("encoding", "utf-8"))
-    manifest = pd.read_csv(ROOT / "prepared" / dataset / "primary_split.csv")
+    manifest = pd.read_csv(manifest_path(config))
     frame = frame.merge(manifest[["sample_id", "partition"]], on="sample_id", validate="one_to_one")
     return config, frame
 
@@ -172,7 +172,7 @@ def main():
     labels = config["dataset"]["labels"]
     label_to_id = {label: index for index, label in enumerate(labels)}
     partitions = {name: frame.loc[frame.partition == name] for name in ("train", "validation", "test")}
-    output = ROOT / "experiments" / args.dataset / "extended_baselines" / args.baseline / f"seed_{args.seed}"
+    output = run_root(config) / args.dataset / "extended_baselines" / args.baseline / f"seed_{args.seed}"
     print(f"{args.dataset}: {args.baseline}; " + ", ".join(f"{key} {len(value):,}" for key, value in partitions.items()))
     if args.dry_run:
         return

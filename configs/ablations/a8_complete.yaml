@@ -1,6 +1,17 @@
-ablation: A8
-model:
-  enable_selector: true
-  enable_counterfactual: true
-  enable_evidence: true
-  enable_interaction: true
+# Generated from src/cadvmh/training/ablations.py; edit the spec, not this file.
+ablation:
+  name: A8
+  description: Complete model with temperature annealing (alias of canonical run)
+  stages:
+  - 1
+  - 2
+  - 3
+  fusion_mode: full
+  active_losses:
+  - necessity
+  - sufficiency
+  - continuity
+  - consistency
+  fixed_temperature: false
+  matched_encoder_epochs: false
+  alias_of_canonical_run: true

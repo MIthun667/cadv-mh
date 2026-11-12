@@ -1,12 +1,11 @@
-ablation: A0
-model:
-  enable_selector: false
-  enable_counterfactual: false
-  enable_evidence: false
-  enable_interaction: false
-loss:
-  necessity: 0.0
-  sufficiency: 0.0
-  sparsity: 0.0
-  continuity: 0.0
-  consistency: 0.0
+# Generated from src/cadvmh/training/ablations.py; edit the spec, not this file.
+ablation:
+  name: A0
+  description: Original-view encoder classifier (matched encoder epochs)
+  stages:
+  - 1
+  fusion_mode: full
+  active_losses: []
+  fixed_temperature: false
+  matched_encoder_epochs: true
+  alias_of_canonical_run: false

@@ -2,7 +2,7 @@
 
 Install the package in editable mode and retain the generated split manifests. Every real run records the complete configuration, hardware, Python and package context, seed, split fingerprint, checkpoint state, history, runtime, and peak GPU allocation.
 
-Use seed 42 for every training, baseline, ablation, and evaluation run. The command-line interfaces reject other training seeds, and evaluation rejects checkpoints whose recorded training seed is not 42. Keep the principal split fixed.
+Use seed 42 for every training, baseline, ablation, and evaluation run. The command-line interfaces reject other training seeds, and evaluation rejects checkpoints whose recorded training seed is not 42. Keep the principal split fixed. Repaired runs use `prepared/<dataset>/primary_split_v2.csv` (decoded with the per-dataset encodings in `configs/dataset_*.yaml`) and write to `experiments_v2/`; pre-repair manifests and `experiments/` are historical and read-only.
 
 The development environment used Python 3.13.7, PyTorch 2.10.0+cu126, Transformers 5.15.1, scikit-learn 1.8.0, pandas 2.3.3, and an NVIDIA RTX 2060 with 12,288 MiB. The repository directory had no Git metadata, so branch and revision fields are null until version control is initialized.
 

@@ -1,2 +1,14 @@
-ablation: A3
-description: A2 plus necessity supervision
+# Generated from src/cadvmh/training/ablations.py; edit the spec, not this file.
+ablation:
+  name: A3
+  description: A2 plus necessity supervision
+  stages:
+  - 1
+  - 2
+  - 3
+  fusion_mode: mean
+  active_losses:
+  - necessity
+  fixed_temperature: false
+  matched_encoder_epochs: false
+  alias_of_canonical_run: false

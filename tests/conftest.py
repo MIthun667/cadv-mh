@@ -1,8 +1,12 @@
+from pathlib import Path
+
 import pytest
 import torch
 from transformers import RobertaConfig, RobertaModel
 
 from cadvmh.models import CADVMH
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
 
 
 @pytest.fixture

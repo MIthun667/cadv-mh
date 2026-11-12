@@ -10,8 +10,9 @@ import torch
 from torch.utils.data import DataLoader
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
-from _common import ROOT, json_write, resolve_dataset_path
+from _common import ROOT, json_write, manifest_path, resolve_dataset_path, run_root
 from cadvmh.data.loader import load_dataset
+from cadvmh.models.masking import budget_counts
 from cadvmh.utils.config import load_config
 from train_extended_baseline import TransformerDataset, transformer_collator
 
@@ -28,11 +29,10 @@ def top_budget(scores, eligible, ratio):
     for row in range(scores.size(0)):
         indices = torch.where(eligible[row])[0]
         if indices.numel():
-            count = max(1, round(float(ratio) * indices.numel()))
-            chosen = indices[
-                torch.topk(scores[row, indices], min(count, indices.numel())).indices
-            ]
-            selection[row, chosen] = True
+            count = int(budget_counts(torch.tensor(indices.numel()), ratio))
+            if count:
+                chosen = indices[torch.topk(scores[row, indices], count).indices]
+                selection[row, chosen] = True
     return selection
 
 
@@ -102,13 +102,13 @@ def main():
         "--output", help="Optional metrics path; useful for bounded smoke checks"
     )
     args = parser.parse_args()
+    run_base = run_root(load_config(ROOT / "configs" / f"{args.dataset}.yaml"))
     if not 0 < args.selection_ratio <= 1:
         raise ValueError("--selection-ratio must be in (0, 1]")
     model_dir = (
         Path(args.model_dir)
         if args.model_dir
-        else ROOT
-        / "experiments"
+        else run_base
         / args.dataset
         / "extended_baselines"
         / "roberta_base"
@@ -118,7 +118,7 @@ def main():
     config = load_config(ROOT / "configs" / f"{args.dataset}.yaml")
     config["dataset"]["path"] = str(resolve_dataset_path(config))
     frame, _ = load_dataset(config["dataset"], config["data"].get("encoding", "utf-8"))
-    manifest = pd.read_csv(ROOT / "prepared" / args.dataset / "primary_split.csv")
+    manifest = pd.read_csv(manifest_path(config))
     frame = frame.merge(
         manifest[["sample_id", "partition"]], on="sample_id", validate="one_to_one"
     )
@@ -196,8 +196,7 @@ def main():
     output = (
         Path(args.output)
         if args.output
-        else ROOT
-        / "experiments"
+        else run_base
         / args.dataset
         / "explanation_baselines"
         / args.method

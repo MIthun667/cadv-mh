@@ -8,7 +8,7 @@ import joblib
 import pandas as pd
 from sklearn.metrics import classification_report, f1_score
 
-from _common import ROOT, json_write, resolve_dataset_path
+from _common import ROOT, json_write, manifest_path, resolve_dataset_path, run_root
 from cadvmh.baselines.classical import build_tfidf_logistic, build_tfidf_svm
 from cadvmh.data.loader import load_dataset
 from cadvmh.utils.config import load_config
@@ -24,10 +24,10 @@ def main() -> None:
     config = load_config(ROOT / "configs" / f"{args.dataset}.yaml")
     config["dataset"]["path"] = str(resolve_dataset_path(config))
     frame, _ = load_dataset(config["dataset"], config["data"].get("encoding", "utf-8"))
-    manifest = pd.read_csv(ROOT / "prepared" / args.dataset / "primary_split.csv")
+    manifest = pd.read_csv(manifest_path(config))
     frame = frame.merge(manifest[["sample_id", "partition"]], on="sample_id", validate="one_to_one")
     if args.baseline == "original_roberta":
-        command = ["python", "scripts/train.py", "--dataset", args.dataset, "--stage", "1", "--seed", str(args.seed), "--output-dir", f"experiments/{args.dataset}/baselines/original_roberta/seed_{args.seed}"]
+        command = ["python", "scripts/train.py", "--dataset", args.dataset, "--stage", "1", "--seed", str(args.seed), "--output-dir", f"{config['project']['output_root']}/{args.dataset}/baselines/original_roberta/seed_{args.seed}"]
         print(f"{args.dataset}: starting original-view RoBERTa baseline with seed {args.seed}.")
         if not args.dry_run:
             subprocess.run(command, cwd=ROOT, check=True)
@@ -49,7 +49,7 @@ def main() -> None:
         "macro_f1": f1_score(test.label, predictions, average="macro", zero_division=0),
         "classification_report": classification_report(test.label, predictions, labels=config["dataset"]["labels"], zero_division=0, output_dict=True),
     }
-    output = ROOT / "experiments" / args.dataset / "baselines" / args.baseline / f"seed_{args.seed}"
+    output = run_root(config) / args.dataset / "baselines" / args.baseline / f"seed_{args.seed}"
     output.mkdir(parents=True, exist_ok=False)
     joblib.dump(model, output / "model.joblib")
     json_write(output / "metrics.json", result)

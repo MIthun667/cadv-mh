@@ -16,6 +16,16 @@ def resolve_dataset_path(config: dict) -> Path:
     return path if path.is_absolute() else (ROOT / path).resolve()
 
 
+def manifest_path(config: dict) -> Path:
+    """Immutable split manifest named by the dataset config (v2 manifests match the repaired decoding)."""
+    return ROOT / config["dataset"]["manifest"]
+
+
+def run_root(config: dict) -> Path:
+    """Root for new run artifacts; historical artifacts under experiments/ are never written to."""
+    return ROOT / config["project"]["output_root"]
+
+
 def file_hash(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:

@@ -4,12 +4,12 @@ Research implementation of the Counterfactual Affective Dual-View Transformer fo
 
 ## Current verified scope
 
-- Independent Dataset A (five-class) and Dataset B (four-class) pipelines.
+- Independent Dataset A (five-class) and Dataset B (binary OCD vs ADHD, subreddit labels) pipelines.
 - Canonical exact-duplicate audits and immutable group-disjoint splits.
 - Optional sparse character-ngram near-duplicate candidate search.
 - One shared configurable Hugging Face encoder for every view.
-- Context-conditioned selection, Binary Concrete masks, deterministic hard masks, counterfactual and evidence-only views.
-- Necessity, sufficiency, sparsity, continuity, classification, and conservative consistency objectives.
+- Context-conditioned selection with exact-budget hard top-k masks (straight-through binary-concrete gradient in training, identical hard selection at evaluation), counterfactual and evidence-only views.
+- Necessity, sufficiency, continuity, classification, and conservative consistency objectives (sparsity is a structural budget constraint under the repaired selector).
 - Three-stage freezing and optimization policies.
 - Classical baselines, original-view RoBERTa baseline path, progressive ablation runner, evaluation metrics, faithfulness functions, and paired group bootstrap.
 
@@ -33,6 +33,12 @@ python scripts/prepare_data.py --dataset dataset_b
 ```
 
 Split creation refuses to overwrite an existing manifest.
+
+## Repair phase
+
+See `docs/repair_plan.md` (defects, mathematics, deviations) and `docs/pilot_protocol.md` (the only recommended next
+step). Repaired runs write to `experiments_v2/`; `experiments/` holds the historical, pre-repair artifacts and must not
+be modified. New split manifests are `prepared/<dataset>/primary_split_v2.csv`.
 
 ## Safe readiness checks
 

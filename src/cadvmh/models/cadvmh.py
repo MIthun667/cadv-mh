@@ -8,7 +8,7 @@ from torch import nn
 from .encoder import SharedEncoder
 from .heads import ClassificationHead
 from .interaction import ContextEffectInteraction
-from .masking import binary_concrete, construct_masked_embeddings, deterministic_selection
+from .masking import binary_concrete, budgeted_straight_through, construct_masked_embeddings, deterministic_selection
 from .pooling import AttentionPooling
 from .selector import ContextConditionedSelector
 
@@ -25,6 +25,8 @@ class CADVMHOutput:
     selector_logits: torch.Tensor | None = None
     selector_probabilities: torch.Tensor | None = None
     selection_mask: torch.Tensor | None = None
+    soft_selection: torch.Tensor | None = None
+    budget_enforced: bool = False  # selection has exactly the budgeted count by construction
     valid_token_mask: torch.Tensor | None = None
     pooling_attention: torch.Tensor | None = None
 
@@ -59,13 +61,18 @@ class CADVMH(nn.Module):
         *,
         stage: int = 3,
         temperature: float = 1.0,
-        selection_mode: str = "soft",
+        selection_mode: str = "budgeted_st",
         selection_ratio: float = 0.2,
         selection_threshold: float = 0.5,
         enable_evidence: bool = True,
         return_auxiliary: bool = True,
         fusion_mode: str = "full",
+        selector_logits_override: torch.Tensor | None = None,
     ) -> CADVMHOutput:
+        """selection_mode (training): "budgeted_st" (repaired default: exact-budget hard top-k forward,
+        binary-concrete backward), or legacy "soft" / "straight_through". When the module is in eval mode
+        (or selection_mode is "top_rho"/"threshold") deterministic selection is used.
+        selector_logits_override replaces the learned selector scores (random-rationale controls)."""
         eligible = attention_mask.bool() & ~special_token_mask.bool()
         position_ids = self.encoder.position_ids_from_input_ids(input_ids)
         original_hidden = self.encoder(input_ids=input_ids, attention_mask=attention_mask, position_ids=position_ids)
@@ -81,10 +88,19 @@ class CADVMH(nn.Module):
             )
 
         selector_logits = self.selector(original_hidden, original)
-        if self.training and selection_mode in {"soft", "straight_through"}:
+        if selector_logits_override is not None:
+            selector_logits = selector_logits_override.to(selector_logits.dtype)
+        soft_selection = None
+        budget_enforced = True
+        if self.training and selection_mode == "budgeted_st":
+            selection, soft_selection = budgeted_straight_through(selector_logits, eligible, temperature, selection_ratio)
+        elif self.training and selection_mode in {"soft", "straight_through"}:
             selection = binary_concrete(selector_logits, eligible, temperature, hard=selection_mode == "straight_through")
+            soft_selection = selection
+            budget_enforced = False
         else:
             deterministic_mode = "threshold" if selection_mode == "threshold" else "top_rho"
+            budget_enforced = deterministic_mode == "top_rho"
             selection = deterministic_selection(selector_logits, eligible, deterministic_mode, selection_ratio, selection_threshold)
 
         word_embeddings = self.encoder.word_embeddings(input_ids)
@@ -127,6 +143,8 @@ class CADVMH(nn.Module):
             selector_logits=selector_logits if return_auxiliary else None,
             selector_probabilities=torch.sigmoid(selector_logits) if return_auxiliary else None,
             selection_mask=selection if return_auxiliary else None,
+            soft_selection=soft_selection if return_auxiliary else None,
+            budget_enforced=budget_enforced,
             valid_token_mask=eligible if return_auxiliary else None,
             pooling_attention=pool_attention if return_auxiliary else None,
         )

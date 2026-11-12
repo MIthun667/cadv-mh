@@ -32,7 +32,46 @@ def load_config(path: str | Path) -> dict[str, Any]:
     return config
 
 
+# Every key below is consumed by the implementation. Unknown keys are rejected so a config can never
+# describe behaviour that the code does not have.
+KNOWN_KEYS: dict[str, set[str]] = {
+    "project": {"name", "output_root", "seed"},
+    "data": {"train_fraction", "validation_fraction", "test_fraction", "split_seed"},
+    "model": {"encoder_name", "max_length", "selector_hidden_dim", "dropout", "interaction_dim", "selection_mode",
+              "selection_ratio", "temperature_initial", "temperature_final", "gradient_checkpointing"},
+    "training": {"microbatch_size", "gradient_accumulation", "encoder_learning_rate", "stage3_encoder_learning_rate",
+                 "selector_learning_rate", "module_learning_rate", "weight_decay", "gradient_clip", "fp16", "patience",
+                 "beta", "stage1_epochs", "stage2_epochs", "stage3_epochs"},
+    "loss": {"classification", "original", "necessity", "sufficiency", "sparsity", "continuity", "consistency",
+             "necessity_margin"},
+    "dataset": {"name", "path", "text_column", "label_column", "id_column", "labels", "label_aliases", "encoding",
+                "manifest"},
+    "transfer": {"source", "target", "direction", "labels", "dataset_a_mapping"},
+    "baseline": {"kind", "encoder_name", "max_features", "ngram_range"},
+}
+SELECTION_MODES = {"budgeted_st", "soft", "straight_through"}
+# The splitter is a 5-fold outer x 8-fold inner StratifiedGroupKFold, i.e. 70/10/20 by construction.
+IMPLEMENTED_FRACTIONS = {"train_fraction": 0.70, "validation_fraction": 0.10, "test_fraction": 0.20}
+
+
 def validate_config(config: dict[str, Any]) -> None:
+    for section, values in config.items():
+        if section.startswith("_") or section == "ablation":
+            continue
+        if section not in KNOWN_KEYS:
+            raise ValueError(f"Unknown configuration section: {section!r}")
+        unknown = set(values) - KNOWN_KEYS[section]
+        if unknown:
+            raise ValueError(f"Unknown keys in [{section}] (not consumed by the implementation): {sorted(unknown)}")
+    mode = config.get("model", {}).get("selection_mode")
+    if mode is not None and mode not in SELECTION_MODES:
+        raise ValueError(f"selection_mode must be one of {sorted(SELECTION_MODES)}")
+    if mode == "budgeted_st" and float(config.get("loss", {}).get("sparsity", 0.0)) != 0.0:
+        raise ValueError("loss.sparsity must be 0.0 with selection_mode=budgeted_st: the budget is enforced exactly, "
+                         "so a sparsity penalty is inert at best and harmful to the straight-through gradient at worst")
+    for key, expected in IMPLEMENTED_FRACTIONS.items():
+        if key in config.get("data", {}) and abs(float(config["data"][key]) - expected) > 1e-8:
+            raise ValueError(f"{key} must be {expected}: the group splitter implements exactly 70/10/20")
     if "dataset" in config:
         required = {"name", "path", "text_column", "label_column", "labels"}
         missing = required - config["dataset"].keys()

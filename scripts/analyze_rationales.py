@@ -16,11 +16,12 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 from transformers import AutoTokenizer
 
-from _common import ROOT, json_write, resolve_dataset_path
+from _common import ROOT, json_write, manifest_path as _manifest_path, resolve_dataset_path, run_root
 from cadvmh.baselines.neural import SparseRationalizer
 from cadvmh.data.loader import load_dataset
 from cadvmh.data.tokenization import special_token_mask
 from cadvmh.evaluation.faithfulness import masked_rationale_text
+from cadvmh.evaluation.faithfulness import final_mechanism_faithfulness
 from cadvmh.models import CADVMH
 from cadvmh.utils.config import load_config
 
@@ -469,13 +470,24 @@ def aggregate(records):
             "sufficiency": float("nan"),
             "selection_ratio": float("nan"),
         }
-    return {
-        "comprehensiveness": float(
-            np.mean([row["gold_comprehensiveness"] for row in records])
-        ),
-        "sufficiency": float(np.mean([row["gold_sufficiency"] for row in records])),
-        "selection_ratio": float(np.mean([row["selection_ratio"] for row in records])),
+    mean = lambda key: float(np.mean([row[key] for row in records]))  # noqa: E731
+    result = {
+        # Auxiliary-head, within-pipeline mechanism diagnostics (gold class). NOT the headline numbers.
+        "aux_gold_comprehensiveness": mean("gold_comprehensiveness"),
+        "aux_gold_sufficiency": mean("gold_sufficiency"),
+        "selection_ratio": mean("selection_ratio"),
     }
+    if "final_mech_predicted_comprehensiveness" in records[0]:
+        # Headline: faithfulness of the deployed final prediction, predicted class (same rule as the baselines).
+        for tag in ("predicted", "gold"):
+            for metric in ("comprehensiveness", "sufficiency", "random_comprehensiveness", "random_sufficiency"):
+                result[f"final_{tag}_{metric}"] = mean(f"final_mech_{tag}_{metric}")
+        result["comprehensiveness"] = result["final_predicted_comprehensiveness"]
+        result["sufficiency"] = result["final_predicted_sufficiency"]
+    else:
+        result["comprehensiveness"] = result["aux_gold_comprehensiveness"]
+        result["sufficiency"] = result["aux_gold_sufficiency"]
+    return result
 
 
 def faithfulness_figure(methods, output, target_ratio):
@@ -559,7 +571,7 @@ def classwise_figure(records, labels, output):
 
 
 def explanation_baseline_aggregates(dataset):
-    root = ROOT / "experiments" / dataset / "explanation_baselines"
+    root = run_root(load_config(ROOT / "configs" / f"{dataset}.yaml")) / dataset / "explanation_baselines"
     names = {
         "attention": "Attention",
         "integrated_gradients": "Integrated gradients",
@@ -633,16 +645,17 @@ def main():
         help="Bounded validation run; omit for the complete test set",
     )
     parser.add_argument("--sparse-checkpoint")
+    parser.add_argument("--fusion-mode", default="full", choices=["full", "mean", "difference", "evidence"])
     args = parser.parse_args()
     checkpoint = (
         Path(args.checkpoint)
         if args.checkpoint
-        else ROOT / "experiments" / args.dataset / "cadvmh" / "seed_42" / "best.pt"
+        else run_root(load_config(ROOT / "configs" / f"{args.dataset}.yaml")) / args.dataset / "cadvmh" / "seed_42" / "best.pt"
     )
     output_dir = (
         Path(args.output_dir)
         if args.output_dir
-        else ROOT / "experiments" / args.dataset / "interpretability"
+        else run_root(load_config(ROOT / "configs" / f"{args.dataset}.yaml")) / args.dataset / "interpretability"
     )
     output_dir.mkdir(parents=True, exist_ok=True)
     payload = torch.load(checkpoint, map_location="cpu", weights_only=False)
@@ -652,7 +665,7 @@ def main():
     config = load_config(ROOT / "configs" / f"{args.dataset}.yaml")
     config["dataset"]["path"] = str(resolve_dataset_path(config))
     frame, _ = load_dataset(config["dataset"], config["data"].get("encoding", "utf-8"))
-    manifest_path = ROOT / "prepared" / args.dataset / "primary_split.csv"
+    manifest_path = _manifest_path(config)
     if (
         payload.get("split_fingerprint")
         != hashlib.sha256(manifest_path.read_bytes()).hexdigest()
@@ -674,7 +687,7 @@ def main():
         checkpoint_config["model"]["encoder_name"],
         selector_hidden_dim=checkpoint_config["model"]["selector_hidden_dim"],
         interaction_dim=checkpoint_config["model"]["interaction_dim"],
-        dropout=checkpoint_config["model"]["selector_dropout"],
+        dropout=checkpoint_config["model"].get("dropout", checkpoint_config["model"].get("selector_dropout", 0.1)),
     )
     model.load_state_dict(payload["model"])
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -686,6 +699,7 @@ def main():
         collate_fn=rationale_collator(tokenizer, config["model"]["max_length"]),
     )
     records = []
+    random_generator = torch.Generator().manual_seed(0)
     with torch.no_grad():
         for batch in loader:
             output = model(
@@ -699,10 +713,19 @@ def main():
                 selection_ratio=config["model"]["selection_ratio"],
                 enable_evidence=True,
                 return_auxiliary=True,
-                fusion_mode="full",
+                fusion_mode=args.fusion_mode,
             )
             batch["labels"] = batch["labels"].to(device)
-            records.extend(record_from_output(output, batch, labels, tokenizer))
+            new_records = record_from_output(output, batch, labels, tokenizer)
+            final = final_mechanism_faithfulness(
+                model,
+                {key: batch[key].to(device) for key in ("input_ids", "attention_mask", "special_token_mask", "labels")},
+                tokenizer.mask_token_id, config["model"]["selection_ratio"], args.fusion_mode, random_generator,
+            )
+            for key, values in final.items():
+                for row, value in zip(new_records, values.cpu().tolist()):
+                    row[f"final_mech_{key}"] = float(value)
+            records.extend(new_records)
     with (output_dir / "rationale_records.jsonl").open("w", encoding="utf-8") as handle:
         for record in records:
             handle.write(json.dumps(record, ensure_ascii=False) + "\n")
@@ -721,8 +744,7 @@ def main():
     sparse_checkpoint = (
         Path(args.sparse_checkpoint)
         if args.sparse_checkpoint
-        else ROOT
-        / "experiments"
+        else run_root(config)
         / args.dataset
         / "extended_baselines"
         / "sparse_rationalizer"

@@ -64,7 +64,10 @@ class CADVMHLoss(nn.Module):
             if self.weights.sufficiency and output.evidence_logits is not None:
                 components["sufficiency"] = sufficiency_loss(output.evidence_logits, labels, self.class_weights)
             if output.selection_mask is not None and output.valid_token_mask is not None:
-                if self.weights.sparsity:
+                if self.weights.sparsity and not output.budget_enforced:
+                    # Legacy soft/threshold selection only. With an exact hard budget the ratio is constant, and a
+                    # mean-matching penalty on the relaxation would only push every logit down, saturating the
+                    # straight-through gradient (observed in tools/cpu_toy_collapse_demo.py), so the term is skipped.
                     components["sparsity"] = sparsity_loss(output.selection_mask, output.valid_token_mask, self.selection_ratio)
                 if self.weights.continuity:
                     components["continuity"] = continuity_loss(output.selection_mask, output.valid_token_mask)

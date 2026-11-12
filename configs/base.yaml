@@ -1,33 +1,23 @@
 project:
   name: cadvmh
-  output_root: experiments
+  output_root: experiments_v2
   seed: 42
 data:
   train_fraction: 0.70
   validation_fraction: 0.10
   test_fraction: 0.20
   split_seed: 42
-  encoding: latin1
-  deduplicate_primary: true
-  near_duplicate:
-    enabled: false
-    char_ngram: 5
-    threshold: 0.92
 model:
   encoder_name: roberta-base
   max_length: 128
-  pooling_dropout: 0.1
   selector_hidden_dim: 256
-  selector_dropout: 0.1
+  dropout: 0.1                 # applied to pooling, selector, heads and interaction
   interaction_dim: 768
-  residual_dropout: 0.1
-  selection_mode: soft
+  selection_mode: budgeted_st   # train: exact-budget hard top-k forward, binary-concrete backward
   selection_ratio: 0.20
-  selection_threshold: 0.50
   temperature_initial: 1.0
-  temperature_final: 0.3
+  temperature_final: 0.3        # reached at the last stage-3 epoch (linear anneal over stages 2+3)
   gradient_checkpointing: true
-  comparison_mode: full
 training:
   microbatch_size: 4
   gradient_accumulation: 4
@@ -48,7 +38,7 @@ loss:
   original: 0.5
   necessity: 0.5
   sufficiency: 0.5
-  sparsity: 0.05
+  sparsity: 0.0                 # inert/forbidden with budgeted_st (exact budget); >0 only for legacy soft modes
   continuity: 0.05
   consistency: 0.1
   necessity_margin: 0.2

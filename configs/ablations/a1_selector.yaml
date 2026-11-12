@@ -1,2 +1,14 @@
-ablation: A1
-description: Learned selector with evidence-only prediction
+# Generated from src/cadvmh/training/ablations.py; edit the spec, not this file.
+ablation:
+  name: A1
+  description: Learned selector with evidence-only prediction
+  stages:
+  - 1
+  - 2
+  - 3
+  fusion_mode: evidence
+  active_losses:
+  - sufficiency
+  fixed_temperature: false
+  matched_encoder_epochs: false
+  alias_of_canonical_run: false

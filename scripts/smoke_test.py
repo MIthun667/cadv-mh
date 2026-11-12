@@ -61,7 +61,7 @@ def main() -> None:
     model.eval()
     with torch.no_grad():
         prediction_before = model(ids, attention, special, 4, stage=3, selection_mode="top_rho").final_logits
-    checkpoint = ROOT / "experiments" / "smoke" / "tiny_checkpoint.pt"
+    checkpoint = ROOT / "experiments_v2" / "smoke" / "tiny_checkpoint.pt"
     save_checkpoint(checkpoint, model, stage=3, epoch=1, config={"synthetic": True}, label_mapping={str(i): i for i in range(4)}, split_fingerprint="synthetic")
     load_checkpoint(checkpoint, model, restore_rng=False)
     model.eval()

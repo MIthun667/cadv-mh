@@ -5,7 +5,8 @@ import argparse
 import subprocess
 import sys
 
-from _common import ROOT
+from _common import ROOT, run_root
+from cadvmh.utils.config import load_config
 
 
 MODELS = [
@@ -35,7 +36,7 @@ def main() -> None:
     datasets = ["dataset_a", "dataset_b"] if args.dataset == "both" else [args.dataset]
     for dataset in datasets:
         for name, relative, fusion in MODELS:
-            run_dir = ROOT / "experiments" / dataset / relative
+            run_dir = run_root(load_config(ROOT / "configs" / f"{dataset}.yaml")) / dataset / relative
             checkpoint = run_dir / "best.pt"
             output = run_dir / "test_metrics.json"
             prefix = f"{dataset}/{name}"

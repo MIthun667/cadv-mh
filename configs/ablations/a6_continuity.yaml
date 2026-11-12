@@ -1,2 +1,16 @@
-ablation: A6
-description: A5 plus continuity regularization
+# Generated from src/cadvmh/training/ablations.py; edit the spec, not this file.
+ablation:
+  name: A6
+  description: A5 plus continuity regularization
+  stages:
+  - 1
+  - 2
+  - 3
+  fusion_mode: full
+  active_losses:
+  - necessity
+  - sufficiency
+  - continuity
+  fixed_temperature: false
+  matched_encoder_epochs: false
+  alias_of_canonical_run: false

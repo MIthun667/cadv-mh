@@ -1,2 +1,13 @@
-ablation: A2
-description: Counterfactual branch with mean fusion
+# Generated from src/cadvmh/training/ablations.py; edit the spec, not this file.
+ablation:
+  name: A2
+  description: Counterfactual branch with mean fusion
+  stages:
+  - 1
+  - 2
+  - 3
+  fusion_mode: mean
+  active_losses: []
+  fixed_temperature: false
+  matched_encoder_epochs: false
+  alias_of_canonical_run: false

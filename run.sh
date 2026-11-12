@@ -5,9 +5,10 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$PROJECT_ROOT"
 
 SEED=42
+RUN_ROOT=experiments_v2   # repaired runs; historical results in experiments/ are never written
 DATASETS=(dataset_a dataset_b)
 ABLATIONS=(A0 A1 A2 A3 A4 A5 A6 A7 A8)
-LEAVE_ONE_OUT=(necessity sufficiency sparsity continuity consistency)
+LEAVE_ONE_OUT=(necessity sufficiency continuity consistency)  # sparsity is structural under budgeted_st
 
 usage() {
   echo "Usage: ./run.sh --yes"
@@ -58,16 +59,16 @@ neural_run_complete() {
 ablation_complete() {
   local dataset="$1"
   local ablation="$2"
-  local target="experiments/${dataset}/ablations/${ablation}/seed_${SEED}"
+  local target="${RUN_ROOT}/${dataset}/ablations/${ablation}/seed_${SEED}"
 
   if neural_run_complete "$target"; then
     return 0
   fi
 
   # A8 is the complete CADV-MH configuration. The canonical proposed-model
-  # run is therefore the Dataset A A8 result and must not be trained twice.
-  if [[ "$dataset" == "dataset_a" && "$ablation" == "A8" ]]; then
-    neural_run_complete "experiments/dataset_a/cadvmh/seed_${SEED}"
+  # run is therefore trained once, in ${RUN_ROOT}/<dataset>/cadvmh, for both datasets.
+  if [[ "$ablation" == "A8" ]]; then
+    neural_run_complete "${RUN_ROOT}/${dataset}/cadvmh/seed_${SEED}"
     return
   fi
 
@@ -93,19 +94,19 @@ python scripts/audit_overlap.py
 # Preflight incomplete training destinations. Completed runs are intentionally
 # skipped below, making the campaign safe to restart after interruption.
 for dataset in "${DATASETS[@]}"; do
-  if ! neural_run_complete "experiments/${dataset}/baselines/original_roberta/seed_${SEED}"; then
-    require_restartable_training_target "experiments/${dataset}/baselines/original_roberta/seed_${SEED}"
+  if ! neural_run_complete "${RUN_ROOT}/${dataset}/baselines/original_roberta/seed_${SEED}"; then
+    require_restartable_training_target "${RUN_ROOT}/${dataset}/baselines/original_roberta/seed_${SEED}"
   fi
 
   for ablation in "${ABLATIONS[@]}"; do
     if ! ablation_complete "$dataset" "$ablation"; then
-      require_restartable_training_target "experiments/${dataset}/ablations/${ablation}/seed_${SEED}"
+      require_restartable_training_target "${RUN_ROOT}/${dataset}/ablations/${ablation}/seed_${SEED}"
     fi
   done
 
   for component in "${LEAVE_ONE_OUT[@]}"; do
-    if ! neural_run_complete "experiments/${dataset}/ablations/without_${component}/seed_${SEED}"; then
-      require_restartable_training_target "experiments/${dataset}/ablations/without_${component}/seed_${SEED}"
+    if ! neural_run_complete "${RUN_ROOT}/${dataset}/ablations/without_${component}/seed_${SEED}"; then
+      require_restartable_training_target "${RUN_ROOT}/${dataset}/ablations/without_${component}/seed_${SEED}"
     fi
   done
 done
@@ -113,7 +114,7 @@ done
 for dataset in "${DATASETS[@]}"; do
   echo "Starting complete seed-${SEED} campaign for ${dataset}"
 
-  if [[ -f "experiments/${dataset}/baselines/tfidf_logistic/seed_${SEED}/metrics.json" ]]; then
+  if [[ -f "${RUN_ROOT}/${dataset}/baselines/tfidf_logistic/seed_${SEED}/metrics.json" ]]; then
     echo "${dataset}: TF-IDF logistic baseline already complete; skipping."
   else
     python scripts/train_baseline.py \
@@ -122,7 +123,7 @@ for dataset in "${DATASETS[@]}"; do
       --seed "$SEED"
   fi
 
-  if [[ -f "experiments/${dataset}/baselines/tfidf_svm/seed_${SEED}/metrics.json" ]]; then
+  if [[ -f "${RUN_ROOT}/${dataset}/baselines/tfidf_svm/seed_${SEED}/metrics.json" ]]; then
     echo "${dataset}: TF-IDF SVM baseline already complete; skipping."
   else
     python scripts/train_baseline.py \
@@ -131,7 +132,7 @@ for dataset in "${DATASETS[@]}"; do
       --seed "$SEED"
   fi
 
-  if neural_run_complete "experiments/${dataset}/baselines/original_roberta/seed_${SEED}"; then
+  if neural_run_complete "${RUN_ROOT}/${dataset}/baselines/original_roberta/seed_${SEED}"; then
     echo "${dataset}: original-view RoBERTa baseline already complete; skipping."
   else
     python scripts/train_baseline.py \
@@ -153,7 +154,7 @@ for dataset in "${DATASETS[@]}"; do
   done
 
   for component in "${LEAVE_ONE_OUT[@]}"; do
-    if neural_run_complete "experiments/${dataset}/ablations/without_${component}/seed_${SEED}"; then
+    if neural_run_complete "${RUN_ROOT}/${dataset}/ablations/without_${component}/seed_${SEED}"; then
       echo "${dataset}: leave-one-out run without ${component} already complete; skipping."
     else
       python scripts/train.py \
@@ -162,20 +163,17 @@ for dataset in "${DATASETS[@]}"; do
         --seed "$SEED" \
         --stage all \
         --disable-loss "$component" \
-        --output-dir "experiments/${dataset}/ablations/without_${component}/seed_${SEED}"
+        --output-dir "${RUN_ROOT}/${dataset}/ablations/without_${component}/seed_${SEED}"
     fi
   done
 
-  final_checkpoint="experiments/${dataset}/ablations/A8/seed_${SEED}/best.pt"
-  if [[ "$dataset" == "dataset_a" && ! -f "$final_checkpoint" ]]; then
-    final_checkpoint="experiments/dataset_a/cadvmh/seed_${SEED}/best.pt"
-  fi
+  final_checkpoint="${RUN_ROOT}/${dataset}/cadvmh/seed_${SEED}/best.pt"  # canonical full model (A8)
 
   python scripts/evaluate.py \
     --dataset "$dataset" \
     --checkpoint "$final_checkpoint" \
     --partition test \
-    --output "experiments/${dataset}/ablations/A8/seed_${SEED}/test_metrics.json"
+    --output "${RUN_ROOT}/${dataset}/cadvmh/seed_${SEED}/test_metrics.json"
 
   python scripts/generate_report.py --dataset "$dataset"
 done
