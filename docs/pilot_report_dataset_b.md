@@ -84,7 +84,7 @@ A0 epochs (val F1): 0.870, 0.869, **0.887**, 0.876, 0.872. Both models overfit (
 | comprehensiveness | 0.460 [0.443, 0.475] | 0.356 [0.342, 0.370] | +0.104 [0.096, 0.113] |
 | sufficiency (lower better) | 0.046 [0.038, 0.053] | 0.392 | -0.346 [-0.366, -0.327] |
 Gold-class: comprehensiveness 0.355 vs random 0.265; sufficiency 0.019 vs 0.294.
-**By predicted class:** predicted-OCD comprehensiveness 0.837 (random 0.637, n = predicted OCD); predicted-ADHD 0.063 (random **0.061**).
+**By predicted class:** predicted-OCD comprehensiveness 0.837 (random 0.637); predicted-ADHD 0.063 (random **0.061**).
 
 ## Shortcut and bias evidence
 1. **Mask hypersensitivity (confirmed).** Random 20% masking lowers the final-head predicted-class probability by 0.356 for CADV-MH but by only
