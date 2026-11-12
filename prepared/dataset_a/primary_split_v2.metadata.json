@@ -1,0 +1,13 @@
+{
+  "actual_partition_counts": {
+    "test": 6824,
+    "train": 23881,
+    "validation": 3412
+  },
+  "c1_controls_removed": 559,
+  "dataset": "dataset_a",
+  "dataset_sha256": "76bf4a04a48488800b11f7930ab04692993a0230426de73e4e295ff3a35d7c4b",
+  "deduplication": "canonical exact groups; conflicting groups excluded; one representative per group",
+  "encoding": "latin-1",
+  "split_seed": 42
+}

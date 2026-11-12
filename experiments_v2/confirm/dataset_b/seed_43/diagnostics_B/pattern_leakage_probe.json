@@ -1,0 +1,28 @@
+{
+  "all_masked": {
+    "aux_head_accuracy": 0.49979140592407173,
+    "aux_head_mean_p_true": 0.5096801906275498,
+    "n": 2397
+  },
+  "foreign_fill": {
+    "aux_head_accuracy": 0.5235711305798916,
+    "aux_head_mean_p_true": 0.5162497050580539,
+    "n": 2397
+  },
+  "kept": {
+    "aux_head_accuracy": 0.8694201084689195,
+    "aux_head_mean_p_true": 0.8650816708008097,
+    "n": 2397
+  },
+  "note": "All variants keep ~20% of positions; chance accuracy ~0.5. 'swapped_mask_foreign_text' keeps another example's selected positions of THIS text.",
+  "random_fill": {
+    "aux_head_accuracy": 0.5002085940759282,
+    "aux_head_mean_p_true": 0.5004270464093004,
+    "n": 2397
+  },
+  "swapped_mask_foreign_text": {
+    "aux_head_accuracy": 0.5056320400500626,
+    "aux_head_mean_p_true": 0.5015047373127878,
+    "n": 2397
+  }
+}

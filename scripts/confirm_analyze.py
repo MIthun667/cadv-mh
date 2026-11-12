@@ -17,12 +17,12 @@ from scipy import stats
 from sklearn.metrics import f1_score
 
 # ---- FROZEN DECISION CONSTANTS ----------------------------------------------------------------------------------
-SEEDS = (42, 43, 44, 45, 46)
+SEEDS = (42, 43, 44)   # DEVIATION: run stopped by user after 3 of 5 planned seeds (protocol said 42-46); edited before any result was examined
 ALPHA_ONE_SIDED = 0.05
 F1_DELTA, F1_SEED_FLOOR = 0.015, 0.03          # N
 E1_MEAN_MIN = 0.03                              # E1 (comprehensiveness advantage, each predicted class)
 E2_MEAN_MAX = -0.02                             # E2 (sufficiency advantage)
-R_MIN_SEEDS = 4                                 # R
+R_MIN_SEEDS = 3                                 # R: DEVIATION, was 4 of 5; with 3 seeds require all 3 (stricter than 80%)
 ECE_MARGIN, NLL_MARGIN = 0.02, 0.10             # K
 GAP_MEAN_MAX = {"ocd": 0.20, "adhd": 0.10}      # H
 GAP_SEED_MAX = {"ocd": 0.30, "adhd": 0.15}      # H

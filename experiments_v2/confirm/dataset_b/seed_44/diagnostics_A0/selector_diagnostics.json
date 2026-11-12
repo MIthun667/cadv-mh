@@ -1,0 +1,79 @@
+{
+  "auxiliary_head_classification": {
+    "accuracy": 0.8827701293283271,
+    "ece": 0.0980230174713151,
+    "macro_f1": 0.8827701293283271,
+    "negative_log_likelihood": 0.5769953727722168
+  },
+  "checkpoint": "experiments_v2/confirm/dataset_b/seed_44/A0/best.pt",
+  "checkpoint_stage": 1,
+  "classification": {
+    "accuracy": 0.8827701293283271,
+    "balanced_accuracy": 0.8827702829709232,
+    "confusion_matrix": [
+      [
+        1058,
+        141
+      ],
+      [
+        140,
+        1058
+      ]
+    ],
+    "ece": 0.0980230174713151,
+    "macro_f1": 0.8827701293283271,
+    "mcc": 0.7655405659418464,
+    "multiclass_brier": 0.21131579744473106,
+    "negative_log_likelihood": 0.5769953727722168,
+    "per_class": {
+      "adhd": {
+        "auprc": 0.9513718796327537,
+        "f1": 0.8827701293283271,
+        "precision": 0.8824020016680567,
+        "recall": 0.8831385642737897,
+        "support": 1198
+      },
+      "ocd": {
+        "auprc": 0.9492242410486275,
+        "f1": 0.8827701293283271,
+        "precision": 0.8831385642737897,
+        "recall": 0.8824020016680567,
+        "support": 1199
+      }
+    },
+    "weighted_f1": 0.8827701293283271
+  },
+  "examples": 2397,
+  "fully_masked_input": {
+    "mean_p_true_class": 0.48192628713771096,
+    "predicted_class_share": {
+      "adhd": 0.0,
+      "ocd": 1.0
+    }
+  },
+  "keyword_leakage_probe": {
+    "accuracy_on_examples_without_keyword": 0.8460255697609783,
+    "accuracy_original_on_those": 0.9933110367892977,
+    "accuracy_with_keyword_masked_on_those": 0.8294314381270903,
+    "fraction_with_explicit_condition_name": 0.24947851481017938
+  },
+  "partition": "validation",
+  "primary_head": "auxiliary",
+  "random_mask_comprehensiveness_plain_classifier": {
+    "ci95": [
+      0.016928162584292458,
+      0.03578216718670175
+    ],
+    "mean": 0.026381716851644504,
+    "n": 2397
+  },
+  "random_mask_comprehensiveness_plain_classifier_predicted_class": {
+    "ci95": [
+      0.05394574809084348,
+      0.07151680889542918
+    ],
+    "mean": 0.06227852266730992,
+    "n": 2397
+  },
+  "selection_ratio_target": 0.2
+}
