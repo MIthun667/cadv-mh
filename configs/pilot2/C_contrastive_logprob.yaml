@@ -1,0 +1,3 @@
+inherits: dataset_b.yaml
+loss:
+  necessity_form: contrastive_logprob

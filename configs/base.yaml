@@ -42,3 +42,5 @@ loss:
   continuity: 0.05
   consistency: 0.1
   necessity_margin: 0.2
+  necessity_form: absolute      # absolute | contrastive_prob | contrastive_logprob (see docs/necessity_objectives.md)
+  necessity_margin_log: 0.6931471805599453   # ln 2, used by contrastive_logprob only

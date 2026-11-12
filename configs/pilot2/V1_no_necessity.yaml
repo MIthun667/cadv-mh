@@ -1,0 +1,3 @@
+inherits: dataset_b.yaml
+loss:
+  necessity: 0.0   # causal diagnostic only: is the necessity term responsible for the generic mask response?

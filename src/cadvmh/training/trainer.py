@@ -52,6 +52,9 @@ class Trainer:
     def _needs_evidence(self, stage: int) -> bool:
         return stage > 1 and evidence_required(self.objective.weights.sufficiency, self.fusion_mode)
 
+    def _needs_random_control(self, stage: int) -> bool:
+        return stage > 1 and bool(self.objective.weights.necessity) and self.objective.necessity_form != "absolute"
+
     def train_epoch(self, loader, stage: int, temperature: float, mask_token_id: int, max_batches: int | None = None) -> dict[str, float]:
         set_stage_train_mode(self.model, stage)
         self.optimizer.zero_grad(set_to_none=True)
@@ -74,6 +77,7 @@ class Trainer:
                     batch["input_ids"], batch["attention_mask"], batch["special_token_mask"], mask_token_id,
                     stage=stage, temperature=temperature, selection_mode=self.selection_mode,
                     selection_ratio=self.selection_ratio, enable_evidence=self._needs_evidence(stage),
+                    enable_random_control=self._needs_random_control(stage),
                     fusion_mode=self.fusion_mode,
                 )
                 augmented_logits = None
@@ -157,7 +161,7 @@ class Trainer:
             common = dict(selection_mode="top_rho", selection_ratio=self.selection_ratio, fusion_mode=self.fusion_mode)
             output = self.model(
                 batch["input_ids"], batch["attention_mask"], batch["special_token_mask"], mask_token_id,
-                stage=stage, enable_evidence=stage > 1, **common,
+                stage=stage, enable_evidence=stage > 1, enable_random_control=self._needs_random_control(stage), **common,
             )
             augmented_logits = None
             if stage == 3 and self.objective.weights.consistency and "augmented_input_ids" in batch:

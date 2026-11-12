@@ -8,7 +8,7 @@ from torch import nn
 from .encoder import SharedEncoder
 from .heads import ClassificationHead
 from .interaction import ContextEffectInteraction
-from .masking import binary_concrete, budgeted_straight_through, construct_masked_embeddings, deterministic_selection
+from .masking import binary_concrete, budgeted_straight_through, budgeted_topk, construct_masked_embeddings, deterministic_selection
 from .pooling import AttentionPooling
 from .selector import ContextConditionedSelector
 
@@ -18,6 +18,7 @@ class CADVMHOutput:
     final_logits: torch.Tensor
     original_logits: torch.Tensor
     counterfactual_logits: torch.Tensor | None = None
+    random_counterfactual_logits: torch.Tensor | None = None  # same-budget random-mask view (contrastive necessity only)
     evidence_logits: torch.Tensor | None = None
     original_representation: torch.Tensor | None = None
     counterfactual_representation: torch.Tensor | None = None
@@ -68,6 +69,7 @@ class CADVMH(nn.Module):
         return_auxiliary: bool = True,
         fusion_mode: str = "full",
         selector_logits_override: torch.Tensor | None = None,
+        enable_random_control: bool = False,
     ) -> CADVMHOutput:
         """selection_mode (training): "budgeted_st" (repaired default: exact-budget hard top-k forward,
         binary-concrete backward), or legacy "soft" / "straight_through". When the module is in eval mode
@@ -116,6 +118,17 @@ class CADVMH(nn.Module):
         counterfactual, _ = self.pooling(counter_hidden, attention_mask)
         counter_logits = self.auxiliary_head(counterfactual)
 
+        random_counter_logits = None
+        if enable_random_control:
+            # Same-size random mask (no parameters, no selector gradient). With a frozen encoder (stage 2) no gradient is needed.
+            random_selection = budgeted_topk(torch.rand_like(selector_logits), eligible, selection_ratio)
+            random_embeddings = construct_masked_embeddings(word_embeddings, random_selection, eligible, mask_embedding, False)
+            frozen = not any(p.requires_grad for p in self.encoder.parameters())
+            with torch.set_grad_enabled(torch.is_grad_enabled() and not frozen):
+                random_hidden = self.encoder(inputs_embeds=random_embeddings, attention_mask=attention_mask, position_ids=position_ids)
+                random_pooled, _ = self.pooling(random_hidden, attention_mask)
+                random_counter_logits = self.auxiliary_head(random_pooled)
+
         evidence_logits = None
         if enable_evidence:
             evidence_embeddings = construct_masked_embeddings(word_embeddings, selection, eligible, mask_embedding, True)
@@ -142,6 +155,7 @@ class CADVMH(nn.Module):
             final_logits=final_logits,
             original_logits=original_logits,
             counterfactual_logits=counter_logits,
+            random_counterfactual_logits=random_counter_logits,
             evidence_logits=evidence_logits,
             original_representation=original if return_auxiliary else None,
             counterfactual_representation=counterfactual if return_auxiliary else None,

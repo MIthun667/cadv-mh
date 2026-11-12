@@ -181,3 +181,71 @@ def test_unknown_config_keys_are_rejected(tmp_path):
     with pytest.raises(ValueError, match="selection_mode"):
         load_config(worse)
     assert "encoding" not in KNOWN_KEYS["data"]  # no global encoding switch
+
+
+# ---- contrastive necessity variants ---------------------------------------------------------------
+def test_contrastive_necessity_is_not_satisfied_by_a_generic_mask_response():
+    from cadvmh.losses.necessity import contrastive_necessity_loss, necessity_loss
+    labels = torch.tensor([0, 0])
+    original = torch.tensor([[4.0, 0.0], [4.0, 0.0]])
+    generic = torch.tensor([[-4.0, 4.0], [-4.0, 4.0]])  # every mask destroys the label equally
+    assert float(necessity_loss(original, generic, labels, 0.2)) == 0.0  # absolute hinge: satisfied, no selector needed
+    for form in ("contrastive_prob", "contrastive_logprob"):
+        loss = contrastive_necessity_loss(generic, generic, labels, form, 0.2)
+        assert float(loss) > 0.1  # random == learned: full penalty
+        specific = contrastive_necessity_loss(generic, original, labels, form, 0.2)  # random harmless, learned harmful
+        assert float(specific) == 0.0
+
+
+def test_contrastive_gradients_push_learned_down_and_random_up():
+    from cadvmh.losses.necessity import contrastive_necessity_loss
+    labels = torch.tensor([0])
+    for form in ("contrastive_prob", "contrastive_logprob"):
+        learned = torch.tensor([[0.3, 0.0]], requires_grad=True)
+        random = torch.tensor([[0.3, 0.0]], requires_grad=True)
+        contrastive_necessity_loss(learned, random, labels, form, 0.2).backward()
+        assert learned.grad[0, 0] > 0 and random.grad[0, 0] < 0  # descending lowers learned p_y, raises random p_y
+
+
+def test_logprob_form_keeps_gradient_where_probability_form_vanishes():
+    from cadvmh.losses.necessity import contrastive_necessity_loss
+    labels = torch.tensor([0])
+    norms = {}
+    for form in ("contrastive_prob", "contrastive_logprob"):
+        learned = torch.tensor([[-12.0, 0.0]], requires_grad=True)  # p_y ~ 6e-6, saturated low
+        random = torch.tensor([[-12.5, 0.0]], requires_grad=True)
+        contrastive_necessity_loss(learned, random, labels, form, 0.2).backward()
+        norms[form] = float(learned.grad.norm())
+    assert norms["contrastive_prob"] < 1e-4 < 0.1 < norms["contrastive_logprob"]
+
+
+def test_random_control_view_only_when_needed_and_training_uses_it(tiny_model, tiny_batch):
+    configure_stage(tiny_model, 3)
+    keys = ("input_ids", "attention_mask", "special_token_mask")
+    plain = tiny_model(**{k: tiny_batch[k] for k in keys}, mask_token_id=4, stage=3)
+    assert plain.random_counterfactual_logits is None
+    out = tiny_model(**{k: tiny_batch[k] for k in keys}, mask_token_id=4, stage=3, enable_random_control=True)
+    assert out.random_counterfactual_logits.shape == out.counterfactual_logits.shape
+    objective = CADVMHLoss(LossWeights(necessity=1.0))
+    objective.necessity_form = "contrastive_prob"
+    objective(out, tiny_batch["labels"], stage=3)["necessity"].backward()
+    assert any(p.grad is not None and p.grad.abs().sum() > 0 for p in tiny_model.encoder.parameters())
+    with pytest.raises(ValueError, match="random-mask control"):
+        objective(plain, tiny_batch["labels"], stage=3)
+
+
+def test_stage2_random_view_does_not_backpropagate_into_frozen_encoder(tiny_model, tiny_batch):
+    configure_stage(tiny_model, 2)
+    set_stage_train_mode(tiny_model, 2)
+    out = tiny_model(**{k: tiny_batch[k] for k in ("input_ids", "attention_mask", "special_token_mask")}, mask_token_id=4, stage=2, enable_random_control=True)
+    assert not out.random_counterfactual_logits.requires_grad
+
+
+def test_necessity_form_config_validation(tmp_path):
+    bad = tmp_path / "x.yaml"
+    bad.write_text("loss:\n  necessity_form: nonsense\n")
+    with pytest.raises(ValueError, match="necessity_form"):
+        load_config(bad)
+    for name in ("B_contrastive_prob", "C_contrastive_logprob", "V1_no_necessity"):
+        cfg = load_config(ROOT_DIR / "configs" / "pilot2" / f"{name}.yaml")
+        assert cfg["model"]["selection_mode"] == "budgeted_st"

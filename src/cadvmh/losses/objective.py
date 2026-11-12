@@ -9,7 +9,7 @@ from cadvmh.models.cadvmh import CADVMHOutput
 
 from .classification import weighted_cross_entropy
 from .consistency import teacher_student_kl
-from .necessity import necessity_loss
+from .necessity import contrastive_necessity_loss, necessity_loss
 from .regularization import continuity_loss, sparsity_loss
 from .sufficiency import sufficiency_loss
 
@@ -37,6 +37,8 @@ class CADVMHLoss(nn.Module):
         self.weights = weights or LossWeights()
         self.register_buffer("class_weights", class_weights)
         self.necessity_margin = necessity_margin
+        self.necessity_form = "absolute"  # "absolute" | "contrastive_prob" | "contrastive_logprob"
+        self.necessity_margin_log = 0.6931471805599453
         self.selection_ratio = selection_ratio
 
     def forward(
@@ -58,9 +60,17 @@ class CADVMHLoss(nn.Module):
         }
         if stage > 1:
             if self.weights.necessity and output.counterfactual_logits is not None:
-                components["necessity"] = necessity_loss(
-                    output.original_logits, output.counterfactual_logits, labels, self.necessity_margin, True
-                )
+                if self.necessity_form == "absolute":
+                    components["necessity"] = necessity_loss(
+                        output.original_logits, output.counterfactual_logits, labels, self.necessity_margin, True
+                    )
+                else:
+                    if output.random_counterfactual_logits is None:
+                        raise ValueError(f"necessity_form={self.necessity_form} requires the random-mask control view")
+                    components["necessity"] = contrastive_necessity_loss(
+                        output.counterfactual_logits, output.random_counterfactual_logits, labels,
+                        self.necessity_form, self.necessity_margin, self.necessity_margin_log,
+                    )
             if self.weights.sufficiency and output.evidence_logits is not None:
                 components["sufficiency"] = sufficiency_loss(output.evidence_logits, labels, self.class_weights)
             if output.selection_mask is not None and output.valid_token_mask is not None:

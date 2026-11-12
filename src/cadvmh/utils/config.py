@@ -43,12 +43,13 @@ KNOWN_KEYS: dict[str, set[str]] = {
                  "selector_learning_rate", "module_learning_rate", "weight_decay", "gradient_clip", "fp16", "patience",
                  "beta", "stage1_epochs", "stage2_epochs", "stage3_epochs"},
     "loss": {"classification", "original", "necessity", "sufficiency", "sparsity", "continuity", "consistency",
-             "necessity_margin"},
+             "necessity_margin", "necessity_form", "necessity_margin_log"},
     "dataset": {"name", "path", "text_column", "label_column", "id_column", "labels", "label_aliases", "encoding",
                 "manifest"},
     "transfer": {"source", "target", "direction", "labels", "dataset_a_mapping"},
     "baseline": {"kind", "encoder_name", "max_features", "ngram_range"},
 }
+NECESSITY_FORMS = {"absolute", "contrastive_prob", "contrastive_logprob"}
 SELECTION_MODES = {"budgeted_st", "budgeted_st_sigmoid", "soft", "straight_through"}
 # The splitter is a 5-fold outer x 8-fold inner StratifiedGroupKFold, i.e. 70/10/20 by construction.
 IMPLEMENTED_FRACTIONS = {"train_fraction": 0.70, "validation_fraction": 0.10, "test_fraction": 0.20}
@@ -69,6 +70,9 @@ def validate_config(config: dict[str, Any]) -> None:
     if mode in {"budgeted_st", "budgeted_st_sigmoid"} and float(config.get("loss", {}).get("sparsity", 0.0)) != 0.0:
         raise ValueError("loss.sparsity must be 0.0 with selection_mode=budgeted_st: the budget is enforced exactly, "
                          "so a sparsity penalty is inert at best and harmful to the straight-through gradient at worst")
+    form = config.get("loss", {}).get("necessity_form")
+    if form is not None and form not in NECESSITY_FORMS:
+        raise ValueError(f"necessity_form must be one of {sorted(NECESSITY_FORMS)}")
     for key, expected in IMPLEMENTED_FRACTIONS.items():
         if key in config.get("data", {}) and abs(float(config["data"][key]) - expected) > 1e-8:
             raise ValueError(f"{key} must be {expected}: the group splitter implements exactly 70/10/20")

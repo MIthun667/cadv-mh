@@ -113,7 +113,8 @@ def main():
 
     rec = {k: [] for k in ["label", "sample_id", "p_final", "p_aux", "aux_o", "aux_cf", "aux_ev", "rnd_cf", "rnd_ev", "first_cf", "first_ev",
                            "last_cf", "last_ev", "ratio", "n_elig", "logit_mean", "logit_std", "sat", "tie", "kw_tokens", "kw_selected",
-                           "allmask_p_true", "allmask_pred", "kw_masked_correct", "kw_orig_correct", "has_kw", "rand_mask_comp_stage1"]}
+                           "allmask_p_true", "allmask_pred", "kw_masked_correct", "kw_orig_correct", "has_kw", "rand_mask_comp_stage1",
+                           "rand_mask_comp_pred_stage1", "jaccard", "runs_learned", "runs_random"]}
     curves = {f"{kind}_{b}": [] for kind in ("learned", "random") for b in BUDGETS}
     final_faith = {}
     sel_rel_pos, elig_rel_pos = [], []
@@ -144,6 +145,8 @@ def main():
                 rnd = budgeted_topk(torch.rand(eligible.shape, generator=gen).to(device), eligible, rho).bool()
                 masked = fwd(batch, torch.where(rnd, torch.full_like(ids, mask_id), ids), stage=1, enable_evidence=False)
                 rec["rand_mask_comp_stage1"] += (true_p(out.original_logits, y) - true_p(masked.original_logits, y)).tolist()
+                yhat = out.original_logits.argmax(-1)
+                rec["rand_mask_comp_pred_stage1"] += (true_p(out.original_logits, yhat) - true_p(masked.original_logits, yhat)).tolist()
                 continue
             sel = out.selection_mask.bool() & eligible
             rec["aux_cf"] += true_p(out.counterfactual_logits, y).tolist(); rec["aux_ev"] += true_p(out.evidence_logits, y).tolist()
@@ -162,6 +165,17 @@ def main():
                     elig_rel_pos += (torch.arange(len(idx)) / (len(idx) - 1)).tolist()
                     sel_rel_pos += [i / (len(idx) - 1) for i, t in enumerate(sel[b, idx].tolist()) if t]
             all_logits.append(logits[eligible].cpu())
+            # rationale stability under dropout perturbation (two stochastic passes, deterministic top-k each) and contiguity
+            model.train()
+            s1 = fwd(batch, enable_evidence=False).selection_mask.bool() & eligible
+            s2 = fwd(batch, enable_evidence=False).selection_mask.bool() & eligible
+            model.eval()
+            rec["jaccard"] += ((s1 & s2).sum(1).float() / (s1 | s2).sum(1).clamp_min(1)).tolist()
+            def runs_per_token(m):
+                starts = m & ~torch.nn.functional.pad(m, (1, 0))[:, :-1]
+                return (starts.sum(1).float() / m.sum(1).clamp_min(1)).tolist()
+            rec["runs_learned"] += runs_per_token(sel)
+            rec["runs_random"] += runs_per_token(budgeted_topk(torch.rand(logits.shape, generator=gen).to(device), eligible, rho).bool())
             rec["kw_tokens"] += kw.sum(1).tolist(); rec["kw_selected"] += (kw & sel).sum(1).tolist()
             # controls at the same budget: random and positional rationales
             pos = torch.arange(logits.size(1), device=device).float().expand_as(logits)
@@ -198,6 +212,7 @@ def main():
         "accuracy_on_examples_without_keyword": float(A("kw_orig_correct")[~has].mean()) if (~has).any() else None}
     if not has_selector:
         report["random_mask_comprehensiveness_plain_classifier"] = ci(A("rand_mask_comp_stage1"))
+        report["random_mask_comprehensiveness_plain_classifier_predicted_class"] = ci(A("rand_mask_comp_pred_stage1"))
     else:
         comp, suff = A("aux_o") - A("aux_cf"), A("aux_o") - A("aux_ev")
         score = A("aux_ev") - A("aux_cf")
@@ -224,6 +239,8 @@ def main():
         report["controls_same_budget"] = controls
         report["comprehensiveness_vs_budget"] = {str(b): {"learned": float(np.mean(curves[f"learned_{b}"])), "random": float(np.mean(curves[f"random_{b}"])),
                                                          "diff_ci": ci(np.asarray(curves[f"learned_{b}"]) - np.asarray(curves[f"random_{b}"]))} for b in BUDGETS}
+        report["rationale_stability_jaccard_dropout"] = ci(A("jaccard"))
+        report["mask_contiguity_runs_per_selected_token"] = {"learned": float(A("runs_learned").mean()), "random": float(A("runs_random").mean())}
         kwt, kws = A("kw_tokens"), A("kw_selected")
         report["selector_keyword_attention"] = {"keyword_tokens_total": int(kwt.sum()), "selected_keyword_tokens": int(kws.sum()),
                                                 "fraction_of_keyword_tokens_selected": float(kws.sum() / max(1, kwt.sum())), "expected_if_random": float(A("ratio").mean())}

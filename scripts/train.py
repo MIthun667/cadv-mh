@@ -125,6 +125,8 @@ def main() -> None:
     objective = CADVMHLoss(LossWeights(**{key: value for key, value in config["loss"].items() if key in loss_weight_keys}), class_weights)
     # Non-weight loss settings are not LossWeights fields.
     objective.necessity_margin = config["loss"]["necessity_margin"]
+    objective.necessity_form = config["loss"].get("necessity_form", "absolute")
+    objective.necessity_margin_log = config["loss"].get("necessity_margin_log", 0.6931471805599453)
     objective.selection_ratio = config["model"]["selection_ratio"]
     selection_mode = config["model"]["selection_mode"]
     selection_ratio = config["model"]["selection_ratio"]
