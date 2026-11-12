@@ -1,0 +1,71 @@
+{
+  "_config_path": "/home/mithun-hossain/Desktop/CADV/CADV-MH/configs/pilot2/B_contrastive_prob.yaml",
+  "data": {
+    "split_seed": 42,
+    "test_fraction": 0.2,
+    "train_fraction": 0.7,
+    "validation_fraction": 0.1
+  },
+  "dataset": {
+    "encoding": "utf-8",
+    "id_column": null,
+    "label_aliases": {
+      "0": "ocd",
+      "1": "adhd"
+    },
+    "label_column": "subreddit",
+    "labels": [
+      "ocd",
+      "adhd"
+    ],
+    "manifest": "prepared/dataset_b/primary_split_v2.csv",
+    "name": "dataset_b",
+    "path": "/home/mithun-hossain/Desktop/CADV/Data/data_1/mental_health_reddit_posts.csv",
+    "text_column": "body"
+  },
+  "loss": {
+    "classification": 1.0,
+    "consistency": 0.1,
+    "continuity": 0.05,
+    "necessity": 0.5,
+    "necessity_form": "contrastive_prob",
+    "necessity_margin": 0.2,
+    "necessity_margin_log": 0.6931471805599453,
+    "original": 0.5,
+    "sparsity": 0.0,
+    "sufficiency": 0.5
+  },
+  "model": {
+    "dropout": 0.1,
+    "encoder_name": "roberta-base",
+    "gradient_checkpointing": true,
+    "interaction_dim": 768,
+    "max_length": 128,
+    "selection_mode": "budgeted_st",
+    "selection_ratio": 0.2,
+    "selector_hidden_dim": 256,
+    "temperature_final": 0.3,
+    "temperature_initial": 1.0
+  },
+  "project": {
+    "name": "cadvmh",
+    "output_root": "experiments_v2",
+    "seed": 42
+  },
+  "training": {
+    "beta": 0.999,
+    "encoder_learning_rate": 2e-05,
+    "fp16": true,
+    "gradient_accumulation": 4,
+    "gradient_clip": 1.0,
+    "microbatch_size": 4,
+    "module_learning_rate": 0.0001,
+    "patience": 2,
+    "selector_learning_rate": 5e-05,
+    "stage1_epochs": 2,
+    "stage2_epochs": 2,
+    "stage3_encoder_learning_rate": 1e-05,
+    "stage3_epochs": 5,
+    "weight_decay": 0.01
+  }
+}

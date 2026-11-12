@@ -1,0 +1,32 @@
+{
+  "ablation": null,
+  "config": "configs/pilot2/B_contrastive_prob.yaml",
+  "dataset": "dataset_b",
+  "encoding": null,
+  "git": {
+    "branch": "repair/selector-and-eval-fixes",
+    "revision": "1db6212a13d1460542cf9237b7dfb4af56a878c6",
+    "status": "?? experiments_v2/pilot2/dataset_b/B_contrastive_prob/\n?? experiments_v2/pilot2/dataset_b/C_contrastive_logprob/\n?? experiments_v2/pilot2/dataset_b/V1_no_necessity/\n?? experiments_v2/pilot2/dataset_b/diagnostics_A0/\n?? experiments_v2/pilot2/dataset_b/diagnostics_A_absolute/\n?? experiments_v2/pilot2/dataset_b/logs/A0_diag.log\n?? experiments_v2/pilot2/dataset_b/logs/A_absolute_diag.log\n?? experiments_v2/pilot2/dataset_b/logs/B_contrastive_prob_stage2.log\n?? experiments_v2/pilot2/dataset_b/logs/B_contrastive_prob_stage3.log\n?? experiments_v2/pilot2/dataset_b/logs/C_contrastive_logprob_stage2.log\n?? experiments_v2/pilot2/dataset_b/logs/C_contrastive_logprob_stage3.log\n?? experiments_v2/pilot2/dataset_b/logs/V1_no_necessity_stage2.log\n?? experiments_v2/pilot2/dataset_b/logs/V1_no_necessity_stage3.log\n?? experiments_v2/pilot2/dataset_b/logs/driver_B_contrastive_prob.log\n?? experiments_v2/pilot2/dataset_b/logs/driver_C_contrastive_logprob.log\n?? experiments_v2/pilot2/dataset_b/logs/driver_V1_no_necessity.log"
+  },
+  "hardware": {
+    "cuda_available": true,
+    "cuda_version": "13.0",
+    "gpu_memory_bytes": 33665843200,
+    "gpu_name": "NVIDIA GeForce RTX 5090",
+    "platform": "Linux-6.17.0-8-generic-x86_64-with-glibc2.42",
+    "python": "3.13.7 (main, Mar  3 2026, 12:19:54) [GCC 15.2.0]",
+    "torch": "2.13.0+cu130"
+  },
+  "partitions": {
+    "test": 4795,
+    "train": 16780,
+    "validation": 2397
+  },
+  "rows": 23972,
+  "seed": 42,
+  "selection_mode": "budgeted_st",
+  "train_class_counts": {
+    "adhd": 8387,
+    "ocd": 8393
+  }
+}
