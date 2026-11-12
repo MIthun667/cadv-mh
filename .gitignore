@@ -9,3 +9,5 @@ experiments/**/checkpoints/
 experiments/**/logs/
 experiments/**/predictions/
 prepared/
+experiments_v2/**/*.pt
+experiments_v2/**/*.safetensors

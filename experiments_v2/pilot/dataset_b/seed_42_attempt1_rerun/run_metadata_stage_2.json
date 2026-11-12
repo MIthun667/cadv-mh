@@ -1,0 +1,32 @@
+{
+  "ablation": null,
+  "config": "configs/pilot_attempt1_sigmoid_surrogate.yaml",
+  "dataset": "dataset_b",
+  "encoding": null,
+  "git": {
+    "branch": "repair/selector-and-eval-fixes",
+    "revision": "f7e007198700d2e349ed64c93d249a1aedf24567",
+    "status": "M .gitignore\n?? configs/pilot_attempt1_sigmoid_surrogate.yaml\n?? experiments_v2/\n?? scripts/pilot_pattern_leakage_probe.py"
+  },
+  "hardware": {
+    "cuda_available": true,
+    "cuda_version": "13.0",
+    "gpu_memory_bytes": 33665843200,
+    "gpu_name": "NVIDIA GeForce RTX 5090",
+    "platform": "Linux-6.17.0-8-generic-x86_64-with-glibc2.42",
+    "python": "3.13.7 (main, Mar  3 2026, 12:19:54) [GCC 15.2.0]",
+    "torch": "2.13.0+cu130"
+  },
+  "partitions": {
+    "test": 4795,
+    "train": 16780,
+    "validation": 2397
+  },
+  "rows": 23972,
+  "seed": 42,
+  "selection_mode": "budgeted_st_sigmoid",
+  "train_class_counts": {
+    "adhd": 8387,
+    "ocd": 8393
+  }
+}

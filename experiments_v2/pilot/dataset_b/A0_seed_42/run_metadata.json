@@ -1,0 +1,32 @@
+{
+  "ablation": "A0",
+  "config": "/home/mithun-hossain/Desktop/CADV/CADV-MH/configs/dataset_b.yaml",
+  "dataset": "dataset_b",
+  "encoding": null,
+  "git": {
+    "branch": "repair/selector-and-eval-fixes",
+    "revision": "27d0c97f31d4cb42d23ef55b510145504c4e434e",
+    "status": "?? experiments_v2/pilot/dataset_b/diagnostics_stage2_r2/\n?? experiments_v2/pilot/dataset_b/logs/A0.log\n?? experiments_v2/pilot/dataset_b/logs/diag_stage2_r2.log\n?? experiments_v2/pilot/dataset_b/logs/stage2_r2.log\n?? experiments_v2/pilot/dataset_b/logs/stage3_r2.log\n?? experiments_v2/pilot/dataset_b/seed_42_r2/"
+  },
+  "hardware": {
+    "cuda_available": true,
+    "cuda_version": "13.0",
+    "gpu_memory_bytes": 33665843200,
+    "gpu_name": "NVIDIA GeForce RTX 5090",
+    "platform": "Linux-6.17.0-8-generic-x86_64-with-glibc2.42",
+    "python": "3.13.7 (main, Mar  3 2026, 12:19:54) [GCC 15.2.0]",
+    "torch": "2.13.0+cu130"
+  },
+  "partitions": {
+    "test": 4795,
+    "train": 16780,
+    "validation": 2397
+  },
+  "rows": 23972,
+  "seed": 42,
+  "selection_mode": "budgeted_st",
+  "train_class_counts": {
+    "adhd": 8387,
+    "ocd": 8393
+  }
+}

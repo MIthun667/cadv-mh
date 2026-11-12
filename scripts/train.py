@@ -224,7 +224,8 @@ def main() -> None:
                 split_fingerprint=split_fingerprint,
             )
         print(f"Stage {stage} complete. Best {selection_key}: {stage_best:.4f}.")
-    print(f"Training complete. Best checkpoint: {run_dir / 'best.pt'}")
+    print(f"Training complete. Stage checkpoints: {run_dir / ('stage' + str(final_stage) + '_best.pt')}"
+          + (f"; final model: {run_dir / 'best.pt'}" if (run_dir / "best.pt").exists() else ""))
 
 
 if __name__ == "__main__":

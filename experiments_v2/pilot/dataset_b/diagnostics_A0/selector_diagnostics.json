@@ -1,0 +1,71 @@
+{
+  "auxiliary_head_classification": {
+    "accuracy": 0.8873591989987485,
+    "ece": 0.0793959557836037,
+    "macro_f1": 0.8873488271703789,
+    "negative_log_likelihood": 0.41568008065223694
+  },
+  "checkpoint": "experiments_v2/pilot/dataset_b/A0_seed_42/best.pt",
+  "checkpoint_stage": 1,
+  "classification": {
+    "accuracy": 0.8873591989987485,
+    "balanced_accuracy": 0.8873633564976935,
+    "confusion_matrix": [
+      [
+        1052,
+        147
+      ],
+      [
+        123,
+        1075
+      ]
+    ],
+    "ece": 0.0793959557836037,
+    "macro_f1": 0.8873488271703789,
+    "mcc": 0.7748756171469269,
+    "multiclass_brier": 0.19185903459249173,
+    "negative_log_likelihood": 0.41568008065223694,
+    "per_class": {
+      "adhd": {
+        "auprc": 0.9469509610840244,
+        "f1": 0.8884297520661157,
+        "precision": 0.8797054009819967,
+        "recall": 0.8973288814691152,
+        "support": 1198
+      },
+      "ocd": {
+        "auprc": 0.9541992061770967,
+        "f1": 0.8862679022746419,
+        "precision": 0.8953191489361703,
+        "recall": 0.8773978315262719,
+        "support": 1199
+      }
+    },
+    "weighted_f1": 0.8873483762213192
+  },
+  "examples": 2397,
+  "fully_masked_input": {
+    "mean_p_true_class": 0.5025644895181987,
+    "predicted_class_share": {
+      "adhd": 1.0,
+      "ocd": 0.0
+    }
+  },
+  "keyword_leakage_probe": {
+    "accuracy_on_examples_without_keyword": 0.8532518065591995,
+    "accuracy_original_on_those": 0.9899665551839465,
+    "accuracy_with_keyword_masked_on_those": 0.8093645484949833,
+    "fraction_with_explicit_condition_name": 0.24947851481017938
+  },
+  "partition": "validation",
+  "primary_head": "auxiliary",
+  "random_mask_comprehensiveness_plain_classifier": {
+    "ci95": [
+      0.025894223185281184,
+      0.043300823033923054
+    ],
+    "mean": 0.03449110629632552,
+    "n": 2397
+  },
+  "selection_ratio_target": 0.2
+}

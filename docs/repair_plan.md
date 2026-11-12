@@ -153,3 +153,23 @@ diagnostics. Attention and IG baseline evaluation now use the same budget functi
 Unit tests on a tiny random RoBERTa (CPU) check shapes, masks, budgets, gradients, stage
 freezing, schedules, loss math and the no-collapse property. They do not establish that
 the repaired model trains well; that requires the pilot procedure in the final report.
+
+
+## R1b. Straight-through surrogate (added after Dataset B pilot attempt 1)
+
+Observation (validation, `experiments_v2/pilot/dataset_b/diagnostics_stage2_attempt1_rerun`). With the
+surrogate `p_i = sigmoid(s_i / tau)` the selector trained for two epochs ended with logits of mean +11.3 (init: -0.05),
+99% of tokens with |l| > 7, a mean surrogate slope `p(1-p)` of 6e-5 (init 0.249), a selector gradient norm 130x
+below that of the boundary surrogate, and a learned auxiliary comprehensiveness of 0.0265 against 0.0269 for
+random selection (selector score -0.277 vs -0.203 for random): the selector did not learn.
+
+Cause (demonstrated part). The absolute-zero threshold of `sigmoid(s/tau)` is unrelated to the selection boundary, so a
+common logit offset removes the gradient. Cause of the offset (not demonstrated). I hypothesised a consistent-sign
+loss gradient on all logits; measured at initialization, `|mean|/std` of `dL/dl` is 0.03, so that hypothesis is not
+supported. Adam amplifying a tiny persistent common-mode component is a plausible driver but was not isolated.
+
+Change. Surrogate `p_i = sigmoid((c_i - theta)/tau)`, `c = s - mean_eligible(s)` (non-detached), `theta` the midpoint of the
+k-th and (k+1)-th largest `c` (detached). Properties: forward value unchanged (exactly the top-k mask, `h_i = 1[c_i > theta]`);
+`p` is invariant to a common offset, so offset drift cannot saturate it; `sum_i dL/ds_i = 0`, the tangent space of the
+constraint `sum m = k`; `p_i ~ 0.5` at the boundary where a swap decision is made. No loss weight and no module changed.
+Legacy surrogate retained as `selection_mode: budgeted_st_sigmoid`. Evidence in `docs/pilot_report_dataset_b.md`.

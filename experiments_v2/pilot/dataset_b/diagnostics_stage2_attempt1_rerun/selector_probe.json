@@ -1,0 +1,137 @@
+{
+  "init": {
+    "hidden_abs_mean": 0.45380347967147827,
+    "block_abs_mean": [
+      0.45380347967147827,
+      0.43687301874160767,
+      0.515971839427948,
+      0.2168518751859665
+    ],
+    "logit_mean": -0.046609435230493546,
+    "logit_std_global": 0.1421194225549698,
+    "logit_within_example_std_mean": 0.04991944879293442,
+    "logit_mean_without_token_block": 0.009729228913784027,
+    "logit_mean_without_pooled_block": 0.02275901846587658,
+    "logit_mean_without_product_block": -0.07045917958021164,
+    "logit_mean_without_abs_diff_block": -0.01669369265437126,
+    "mean_sigmoid_slope_p(1-p)": 0.24861927330493927,
+    "selector_gradient_norm": {
+      "budgeted_st_sigmoid": {
+        "selector_grad_norm_mean": 0.4619782231748104,
+        "per_seed": [
+          0.18502430617809296,
+          0.4522368907928467,
+          0.5981500744819641,
+          0.6125016212463379
+        ],
+        "dL_dlogit_token_mean": -2.4015812130073755e-06,
+        "dL_dlogit_token_std": 8.760833043197636e-05,
+        "common_mode_ratio_abs_mean_over_std": 0.02959346500652991,
+        "sum_over_tokens_per_example_mean": null
+      },
+      "budgeted_st": {
+        "selector_grad_norm_mean": 0.1193266250193119,
+        "per_seed": [
+          0.11369019001722336,
+          0.10178085416555405,
+          0.14037677645683289,
+          0.12145867943763733
+        ],
+        "dL_dlogit_token_mean": 3.103698802955565e-14,
+        "dL_dlogit_token_std": 0.00010339696382288821,
+        "common_mode_ratio_abs_mean_over_std": 2.2114817107136483e-09,
+        "sum_over_tokens_per_example_mean": null
+      }
+    }
+  },
+  "attempt1_after_stage2": {
+    "hidden_abs_mean": 0.45380347967147827,
+    "block_abs_mean": [
+      0.45380347967147827,
+      0.43687301874160767,
+      0.515971839427948,
+      0.2168518751859665
+    ],
+    "logit_mean": 11.321359634399414,
+    "logit_std_global": 1.4360361099243164,
+    "logit_within_example_std_mean": 0.811978280544281,
+    "logit_mean_without_token_block": 9.665885925292969,
+    "logit_mean_without_pooled_block": 9.406919479370117,
+    "logit_mean_without_product_block": 4.55029296875,
+    "logit_mean_without_abs_diff_block": 9.125256538391113,
+    "mean_sigmoid_slope_p(1-p)": 5.999457789584994e-05,
+    "selector_gradient_norm": {
+      "budgeted_st_sigmoid": {
+        "selector_grad_norm_mean": 0.0034467228688299656,
+        "per_seed": [
+          0.0021838760003447533,
+          0.005797027610242367,
+          0.0019396375864744186,
+          0.0038663502782583237
+        ],
+        "dL_dlogit_token_mean": -8.025864861593845e-09,
+        "dL_dlogit_token_std": 1.0630887601337236e-06,
+        "common_mode_ratio_abs_mean_over_std": 0.015641868666134477,
+        "sum_over_tokens_per_example_mean": null
+      },
+      "budgeted_st": {
+        "selector_grad_norm_mean": 0.10910265892744064,
+        "per_seed": [
+          0.11400984227657318,
+          0.0799495279788971,
+          0.10259050130844116,
+          0.13986076414585114
+        ],
+        "dL_dlogit_token_mean": -4.877241460091858e-14,
+        "dL_dlogit_token_std": 7.725793057034025e-05,
+        "common_mode_ratio_abs_mean_over_std": 1.8100257122902817e-09,
+        "sum_over_tokens_per_example_mean": null
+      }
+    }
+  },
+  "attempt2_after_stage2": {
+    "hidden_abs_mean": 0.45380347967147827,
+    "block_abs_mean": [
+      0.45380347967147827,
+      0.43687301874160767,
+      0.515971839427948,
+      0.2168518751859665
+    ],
+    "logit_mean": 0.0438566580414772,
+    "logit_std_global": 13.114912986755371,
+    "logit_within_example_std_mean": 5.53366231918335,
+    "logit_mean_without_token_block": -3.2604622840881348,
+    "logit_mean_without_pooled_block": -0.8825781941413879,
+    "logit_mean_without_product_block": -3.257678747177124,
+    "logit_mean_without_abs_diff_block": 9.322559356689453,
+    "mean_sigmoid_slope_p(1-p)": 0.024851838126778603,
+    "selector_gradient_norm": {
+      "budgeted_st_sigmoid": {
+        "selector_grad_norm_mean": 0.3582818005234003,
+        "per_seed": [
+          0.19133096933364868,
+          0.5511971116065979,
+          0.5963195562362671,
+          0.09427956491708755
+        ],
+        "dL_dlogit_token_mean": -8.022076762870256e-07,
+        "dL_dlogit_token_std": 2.9994555916346144e-05,
+        "common_mode_ratio_abs_mean_over_std": 0.02416465269670852,
+        "sum_over_tokens_per_example_mean": null
+      },
+      "budgeted_st": {
+        "selector_grad_norm_mean": 0.1993548348546028,
+        "per_seed": [
+          0.1358851194381714,
+          0.27971532940864563,
+          0.20994246006011963,
+          0.1718764305114746
+        ],
+        "dL_dlogit_token_mean": 2.216927982607187e-14,
+        "dL_dlogit_token_std": 6.608732928725658e-05,
+        "common_mode_ratio_abs_mean_over_std": 2.3656625324724422e-09,
+        "sum_over_tokens_per_example_mean": null
+      }
+    }
+  }
+}
