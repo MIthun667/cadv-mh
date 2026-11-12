@@ -56,18 +56,46 @@ def budgeted_topk(scores: torch.Tensor, eligible_mask: torch.Tensor, ratio: floa
 
 
 def budgeted_straight_through(
-    logits: torch.Tensor, eligible_mask: torch.Tensor, temperature: float, ratio: float, epsilon: float = 1e-6
+    logits: torch.Tensor,
+    eligible_mask: torch.Tensor,
+    temperature: float,
+    ratio: float,
+    epsilon: float = 1e-6,
+    surrogate: str = "boundary",
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    """Training selection: forward = exact-budget hard top-k of perturbed logits, backward = binary-concrete.
+    """Training selection: forward = exact-budget hard top-k of perturbed logits, backward = relaxation.
 
-    Returns (selection, soft). selection == hard in value and has d selection / d logits = d soft / d logits.
+    surrogate="boundary" (default): p_i = sigmoid((c_i - theta) / tau) where c = s - mean_eligible(s) and theta is the
+    midpoint between the k-th and (k+1)-th largest c of the row (detached). The hard mask is exactly 1[c_i > theta], so p_i
+    is the natural smooth version of the forward indicator, is near 0.5 at the selection boundary whatever the absolute
+    level of the logits, and sum_i dL/ds_i = 0 (no common-mode drive). surrogate="sigmoid": p_i = sigmoid(s_i / tau), which has its threshold at 0
+    and loses all gradient when logits share a large common offset (observed in the first Dataset B pilot).
+
+    Returns (selection, soft). selection == hard in value and d selection / d logits = d soft / d logits.
     Selecting every eligible token is impossible: sum(selection) = k <= n - 1.
     """
     if temperature <= 0:
         raise ValueError("temperature must be positive")
     perturbed = logits + _stable_logistic_noise(logits, epsilon)
     hard = budgeted_topk(perturbed, eligible_mask, ratio)
-    soft = torch.sigmoid(perturbed / temperature) * eligible_mask.to(logits.dtype)
+    eligible = eligible_mask.bool()
+    if surrogate == "sigmoid":
+        soft = torch.sigmoid(perturbed / temperature) * eligible.to(logits.dtype)
+    elif surrogate == "boundary":
+        # Centre over eligible tokens (non-detached) so the surrogate has no all-ones gradient direction: the budget fixes
+        # sum(selection) = k, hence admissible gradients must satisfy sum_i dL/ds_i = 0 (tangent space of the budget).
+        n = eligible.sum(dim=1, keepdim=True).clamp_min(1).to(perturbed.dtype)
+        centred = perturbed - (perturbed * eligible).sum(dim=1, keepdim=True) / n
+        scores = centred.detach().masked_fill(~eligible, float("-inf"))
+        values = scores.sort(dim=1, descending=True).values
+        k = budget_counts(eligible.sum(dim=1), ratio)
+        rows = torch.arange(scores.size(0), device=scores.device)
+        upper = values[rows, (k - 1).clamp(min=0)]
+        lower = values[rows, k.clamp(max=scores.size(1) - 1)]
+        theta = torch.where(k > 0, (upper + lower) / 2, torch.full_like(upper, float("inf")))
+        soft = torch.sigmoid((centred - theta.unsqueeze(1)) / temperature) * eligible.to(logits.dtype)
+    else:
+        raise ValueError(f"Unknown surrogate: {surrogate}")
     return hard.to(soft.dtype) + (soft - soft.detach()), soft  # parentheses: forward value is exactly `hard`
 
 

@@ -110,3 +110,35 @@ def test_selector_logits_are_float32_even_under_autocast(tiny_model, tiny_batch)
         out = tiny_model(**{k: tiny_batch[k] for k in ("input_ids", "attention_mask", "special_token_mask")}, mask_token_id=4, stage=2)
     assert out.selector_logits.dtype == torch.float32
     assert out.selection_mask.dtype == torch.float32
+
+
+def test_boundary_surrogate_is_shift_invariant_zero_sum_and_keeps_gradient_when_logits_are_offset():
+    eligible = torch.ones(3, 10, dtype=torch.bool)
+    eligible[:, 0] = False
+    base = torch.randn(3, 10)
+    results = {}
+    for offset in (0.0, 11.0):
+        torch.manual_seed(7)  # identical noise
+        logits = (base + offset).requires_grad_(True)
+        selection, soft = budgeted_straight_through(logits, eligible, 1.0, RATIO)
+        upstream = torch.randn(3, 10, generator=torch.Generator().manual_seed(1))
+        grad, = torch.autograd.grad((selection * upstream).sum(), logits)
+        results[offset] = (selection.detach(), soft.detach(), grad)
+    assert torch.equal(results[0.0][0], results[11.0][0])  # same hard mask
+    assert torch.allclose(results[0.0][1], results[11.0][1], atol=1e-4)  # same surrogate: no saturation from offset
+    assert torch.allclose(results[0.0][2], results[11.0][2], atol=1e-4)
+    assert results[11.0][2].abs().sum() > 0
+    assert torch.allclose(results[11.0][2].sum(dim=1), torch.zeros(3), atol=1e-5)  # sum_i dL/ds_i = 0
+
+
+def test_legacy_sigmoid_surrogate_loses_gradient_under_common_offset():
+    eligible = torch.ones(4, 40, dtype=torch.bool)
+    upstream = torch.randn(4, 40, generator=torch.Generator().manual_seed(5))
+    norms = {}
+    for surrogate in ("sigmoid", "boundary"):
+        torch.manual_seed(3)
+        logits = (torch.randn(4, 40) + 20.0).requires_grad_(True)
+        selection, _ = budgeted_straight_through(logits, eligible, 1.0, RATIO, surrogate=surrogate)
+        grad, = torch.autograd.grad((selection * upstream).sum(), logits)
+        norms[surrogate] = float(grad.norm())
+    assert norms["sigmoid"] < 0.1 * norms["boundary"]  # the failure observed in the first Dataset B pilot

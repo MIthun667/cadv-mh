@@ -49,7 +49,7 @@ KNOWN_KEYS: dict[str, set[str]] = {
     "transfer": {"source", "target", "direction", "labels", "dataset_a_mapping"},
     "baseline": {"kind", "encoder_name", "max_features", "ngram_range"},
 }
-SELECTION_MODES = {"budgeted_st", "soft", "straight_through"}
+SELECTION_MODES = {"budgeted_st", "budgeted_st_sigmoid", "soft", "straight_through"}
 # The splitter is a 5-fold outer x 8-fold inner StratifiedGroupKFold, i.e. 70/10/20 by construction.
 IMPLEMENTED_FRACTIONS = {"train_fraction": 0.70, "validation_fraction": 0.10, "test_fraction": 0.20}
 
@@ -66,7 +66,7 @@ def validate_config(config: dict[str, Any]) -> None:
     mode = config.get("model", {}).get("selection_mode")
     if mode is not None and mode not in SELECTION_MODES:
         raise ValueError(f"selection_mode must be one of {sorted(SELECTION_MODES)}")
-    if mode == "budgeted_st" and float(config.get("loss", {}).get("sparsity", 0.0)) != 0.0:
+    if mode in {"budgeted_st", "budgeted_st_sigmoid"} and float(config.get("loss", {}).get("sparsity", 0.0)) != 0.0:
         raise ValueError("loss.sparsity must be 0.0 with selection_mode=budgeted_st: the budget is enforced exactly, "
                          "so a sparsity penalty is inert at best and harmful to the straight-through gradient at worst")
     for key, expected in IMPLEMENTED_FRACTIONS.items():

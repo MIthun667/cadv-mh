@@ -94,8 +94,12 @@ class CADVMH(nn.Module):
             selector_logits = selector_logits_override.to(selector_logits.dtype)
         soft_selection = None
         budget_enforced = True
-        if self.training and selection_mode == "budgeted_st":
-            selection, soft_selection = budgeted_straight_through(selector_logits, eligible, temperature, selection_ratio)
+        if self.training and selection_mode in {"budgeted_st", "budgeted_st_sigmoid"}:
+            # "budgeted_st_sigmoid" = surrogate of the first pilot (kept for provenance); default uses the boundary surrogate.
+            selection, soft_selection = budgeted_straight_through(
+                selector_logits, eligible, temperature, selection_ratio,
+                surrogate="sigmoid" if selection_mode == "budgeted_st_sigmoid" else "boundary",
+            )
         elif self.training and selection_mode in {"soft", "straight_through"}:
             selection = binary_concrete(selector_logits, eligible, temperature, hard=selection_mode == "straight_through")
             soft_selection = selection
