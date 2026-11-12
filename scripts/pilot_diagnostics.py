@@ -114,7 +114,7 @@ def main():
     rec = {k: [] for k in ["label", "sample_id", "p_final", "p_aux", "aux_o", "aux_cf", "aux_ev", "rnd_cf", "rnd_ev", "first_cf", "first_ev",
                            "last_cf", "last_ev", "ratio", "n_elig", "logit_mean", "logit_std", "sat", "tie", "kw_tokens", "kw_selected",
                            "allmask_p_true", "allmask_pred", "kw_masked_correct", "kw_orig_correct", "has_kw", "rand_mask_comp_stage1",
-                           "rand_mask_comp_pred_stage1", "jaccard", "runs_learned", "runs_random"]}
+                           "rand_mask_comp_pred_stage1", "jaccard", "runs_learned", "runs_random", "rationale_positions"]}
     curves = {f"{kind}_{b}": [] for kind in ("learned", "random") for b in BUDGETS}
     final_faith = {}
     sel_rel_pos, elig_rel_pos = [], []
@@ -149,6 +149,7 @@ def main():
                 rec["rand_mask_comp_pred_stage1"] += (true_p(out.original_logits, yhat) - true_p(masked.original_logits, yhat)).tolist()
                 continue
             sel = out.selection_mask.bool() & eligible
+            rec["rationale_positions"] += [" ".join(map(str, torch.where(sel[b])[0].tolist())) for b in range(sel.size(0))]
             rec["aux_cf"] += true_p(out.counterfactual_logits, y).tolist(); rec["aux_ev"] += true_p(out.evidence_logits, y).tolist()
             logits = out.selector_logits.float()
             n = eligible.sum(1)
@@ -255,6 +256,7 @@ def main():
     table = pd.DataFrame({"sample_id": rec["sample_id"], "label": [labels[i] for i in targets], "pred": [labels[i] for i in pred], **{f"p_{l}": probs[:, i] for i, l in enumerate(labels)},
                           "aux_p_true_original": rec["aux_o"]})
     if has_selector:
+        table["rationale_token_positions"] = rec["rationale_positions"]
         table["aux_p_true_counterfactual"], table["aux_p_true_evidence"], table["selection_ratio"] = rec["aux_cf"], rec["aux_ev"], rec["ratio"]
         for tag in ("rnd", "first", "last"):
             table[f"aux_p_true_cf_{tag}"] = rec[f"{tag}_cf"]

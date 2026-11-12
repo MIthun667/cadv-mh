@@ -58,7 +58,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", choices=["dataset_a", "dataset_b"], required=True)
     parser.add_argument("--model", default="cadvmh", choices=["cadvmh"])
-    parser.add_argument("--seed", type=int, choices=[42], default=42)
+    parser.add_argument("--seed", type=int, choices=[42, 43, 44, 45, 46], default=42)
     parser.add_argument("--config")
     parser.add_argument("--stage", default="all", choices=["1", "2", "3", "all"])
     parser.add_argument("--output-dir")

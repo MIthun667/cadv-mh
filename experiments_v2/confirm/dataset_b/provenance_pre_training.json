@@ -1,0 +1,17 @@
+{
+ "git_head": "2a487b2e695b9cc9a6e7bcdcb52e0697829d10b7",
+ "data_sha256": "9cb46df7592942d280433baaf5f020ce3bc452f20f006d09382a374484fbcb65",
+ "manifest_sha256": "3a670805f80b50438eabd0ec4d4375d7987bda2e83fcf617f94105f5c7d377f7",
+ "manifest_partitions": {
+  "train": 16780,
+  "test": 4795,
+  "validation": 2397
+ },
+ "pilot2_stage1_sha256": "dcc352492268e21f16bc566812b720fc86f1021ac3b31af432e1fbd9c4903a5d",
+ "pilot2_ckpt_sha256": {
+  "B_contrastive_prob": "d2d9768723a0f5e1fe964d83bef1a6a19939e6230b68ec30390cdbf91d84ed53",
+  "V1_no_necessity": "c283d94583ad3ed7a7df8b568c23d169fffd203b80b3f1eb6371483bd7eedae2"
+ },
+ "pilot_A0_ckpt_sha256": "8ca170b5899002519a948d7c69dedd035e1bac549c1d28f6d9bd594bf6812ab7",
+ "manifest_dup_ids": 0
+}
