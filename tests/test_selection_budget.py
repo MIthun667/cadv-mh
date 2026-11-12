@@ -103,3 +103,10 @@ def test_counterfactual_plus_evidence_partition_eligible_tokens():
     assert not (masked_in_cf & masked_in_ev).any()  # disjoint
     assert (masked_in_cf | masked_in_ev)[eligible].all()  # together they cover all eligible tokens
     assert torch.equal(cf[:, 0], embeddings[:, 0]) and torch.equal(ev[:, 5], embeddings[:, 5])
+
+
+def test_selector_logits_are_float32_even_under_autocast(tiny_model, tiny_batch):
+    with torch.autocast("cpu", dtype=torch.bfloat16):
+        out = tiny_model(**{k: tiny_batch[k] for k in ("input_ids", "attention_mask", "special_token_mask")}, mask_token_id=4, stage=2)
+    assert out.selector_logits.dtype == torch.float32
+    assert out.selection_mask.dtype == torch.float32

@@ -63,6 +63,7 @@ def main() -> None:
     parser.add_argument("--stage", default="all", choices=["1", "2", "3", "all"])
     parser.add_argument("--output-dir")
     parser.add_argument("--resume")
+    parser.add_argument("--init-from", help="Load model weights only (no optimizer/stage check) to run a later stage in a separate invocation")
     parser.add_argument("--ablation", choices=[f"A{i}" for i in range(9)])
     parser.add_argument("--disable-loss", action="append", choices=["necessity", "sufficiency", "sparsity", "continuity", "consistency"])
     parser.add_argument("--fusion-mode", choices=["full", "mean", "difference", "evidence"])
@@ -129,13 +130,18 @@ def main() -> None:
     selection_ratio = config["model"]["selection_ratio"]
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     run_dir = Path(args.output_dir) if args.output_dir else run_root(config) / args.dataset / "cadvmh" / f"seed_{args.seed}"
-    if run_dir.exists() and not args.resume:
+    if run_dir.exists() and not args.resume and not args.init_from:
         existing_entries = {path.name for path in run_dir.iterdir()}
         reusable_failed_run_entries = {"run_metadata.json"}
         if existing_entries - reusable_failed_run_entries:
             raise FileExistsError(f"Run directory contains training artifacts: {run_dir}")
     run_dir.mkdir(parents=True, exist_ok=True)
-    json_write(run_dir / "run_metadata.json", summary | {"hardware": hardware_report(), "git": git_report(str(ROOT)), "seed": args.seed})
+    json_write(run_dir / f"run_metadata_stage_{args.stage}.json" if args.init_from or args.stage != "all" else run_dir / "run_metadata.json", summary | {"hardware": hardware_report(), "git": git_report(str(ROOT)), "seed": args.seed})
+    json_write(run_dir / f"config_resolved_stage_{args.stage}.json", config)
+    if args.init_from:
+        loaded = load_checkpoint(args.init_from, model, restore_rng=False)
+        print(f"Initialised model weights from {args.init_from} (stage {loaded['stage']}).")
+        del loaded
     loaders = {}
     for partition, shuffle in [("train", True), ("validation", False)]:
         subset = frame.loc[frame.partition == partition]
@@ -202,7 +208,12 @@ def main() -> None:
             raise RuntimeError(f"Stage {stage} completed without a valid best model state")
         model.load_state_dict(stage_best_state)
         del stage_best_state
-        if stage == final_stage:
+        # Every stage keeps its selected state (needed to inspect the selector after stage 2).
+        save_checkpoint(
+            run_dir / f"stage{stage}_best.pt", model, stage=stage, epoch=stage_best_epoch, config=config,
+            label_mapping={v: i for i, v in enumerate(labels)}, split_fingerprint=split_fingerprint,
+        )
+        if stage == final_stage and stage == (forced_stage or 3):
             save_checkpoint(
                 run_dir / "best.pt",
                 model,

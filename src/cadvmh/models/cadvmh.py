@@ -87,7 +87,9 @@ class CADVMH(nn.Module):
                 pooling_attention=pool_attention if return_auxiliary else None,
             )
 
-        selector_logits = self.selector(original_hidden, original)
+        # Selection (noise, ranking, ties) is done in float32: under fp16 autocast the logits would be half
+        # precision, whose ~1e-3 resolution creates spurious ties and degrades the Gumbel noise near 1.
+        selector_logits = self.selector(original_hidden, original).float()
         if selector_logits_override is not None:
             selector_logits = selector_logits_override.to(selector_logits.dtype)
         soft_selection = None

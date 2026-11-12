@@ -142,6 +142,7 @@ class Trainer:
         self.model.eval()
         predictions, targets = [], []
         losses_total = 0.0
+        component_totals = defaultdict(float)
         processed_batches = 0
         probs = defaultdict(list)
         saturation, ties, ratios = [], [], []
@@ -166,6 +167,8 @@ class Trainer:
                 ).original_logits
             losses = self.objective(output, batch["labels"], augmented_logits=augmented_logits, stage=stage)
             losses_total += float(losses["total"])
+            for key, value in losses.items():
+                component_totals[key] += float(value)
             predictions.extend(primary_logits(output, stage).argmax(-1).cpu().tolist())
             targets.extend(batch["labels"].cpu().tolist())
             if stage > 1:
@@ -189,6 +192,9 @@ class Trainer:
             "validation_loss": losses_total / max(1, processed_batches),
             "validation_macro_f1": f1_score(targets, predictions, average="macro", zero_division=0),
         }
+        for key, value in component_totals.items():
+            if key != "total":
+                result[f"validation_{key}"] = value / max(1, processed_batches)
         if stage > 1:
             p = {name: torch.cat(values) for name, values in probs.items()}
             result.update({
