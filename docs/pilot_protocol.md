@@ -29,8 +29,8 @@ Inspect the printed encoding/mojibake report; the loader aborts if >0.5% of text
 
 ## 3. Controls (same split, validation only)
 1. A0 with matched encoder epochs: `python scripts/run_ablations.py --dataset dataset_b --ablations A0 --execute`.
-2. Faithfulness on validation (add `--partition validation` support or use a bounded `--max-examples` run of
-   `scripts/analyze_rationales.py`): headline `final_predicted_comprehensiveness` must exceed
+2. Faithfulness on validation (`python scripts/analyze_rationales.py --dataset dataset_b --partition validation ...`; the default
+   `--partition test` is for the final report only): headline `final_predicted_comprehensiveness` must exceed
    `final_predicted_random_comprehensiveness` by a margin that is stable across 3 bootstrap resamples; otherwise the
    effect is a mask-count cue, not selector quality.
 3. Attention and IG baselines re-evaluated with the repaired budget function and the same model class rule.

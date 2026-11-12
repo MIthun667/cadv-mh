@@ -96,6 +96,7 @@ def main():
     )
     parser.add_argument("--model-dir")
     parser.add_argument("--selection-ratio", type=float, default=0.20)
+    parser.add_argument("--partition", default="test", choices=["validation", "test"])
     parser.add_argument("--ig-steps", type=int, default=16)
     parser.add_argument("--max-batches", type=int)
     parser.add_argument(
@@ -122,7 +123,7 @@ def main():
     frame = frame.merge(
         manifest[["sample_id", "partition"]], on="sample_id", validate="one_to_one"
     )
-    frame = frame.loc[frame.partition == "test"]
+    frame = frame.loc[frame.partition == args.partition]
     label_to_id = {
         label: index for index, label in enumerate(config["dataset"]["labels"])
     }

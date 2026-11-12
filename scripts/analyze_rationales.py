@@ -644,6 +644,7 @@ def main():
         type=int,
         help="Bounded validation run; omit for the complete test set",
     )
+    parser.add_argument("--partition", default="test", choices=["validation", "test"])
     parser.add_argument("--sparse-checkpoint")
     parser.add_argument("--fusion-mode", default="full", choices=["full", "mean", "difference", "evidence"])
     args = parser.parse_args()
@@ -675,7 +676,7 @@ def main():
     frame = frame.merge(
         manifest[["sample_id", "partition"]], on="sample_id", validate="one_to_one"
     )
-    test = frame.loc[frame.partition == "test"].reset_index(drop=True)
+    test = frame.loc[frame.partition == args.partition].reset_index(drop=True)  # "test" only for the final report
     if args.max_examples:
         test = test.head(args.max_examples)
     labels = config["dataset"]["labels"]
