@@ -1,0 +1,126 @@
+{
+  "class_counts": {
+    "anxiety": 10071,
+    "casual": 10583,
+    "depression": 9913,
+    "neutral": 10073,
+    "suicidal": 10041
+  },
+  "conflicting_group_examples": [
+    {
+      "group_id": "exact:43bec9f275b9ff4205f78025",
+      "label": "casual"
+    },
+    {
+      "group_id": "exact:d175fe66ed0eb21812c064ae",
+      "label": "casual"
+    },
+    {
+      "group_id": "exact:e283f689154214c4e59bd2b8",
+      "label": "casual"
+    },
+    {
+      "group_id": "exact:e283f689154214c4e59bd2b8",
+      "label": "depression"
+    },
+    {
+      "group_id": "exact:165343ef4b38e4d24b99f7a7",
+      "label": "anxiety"
+    },
+    {
+      "group_id": "exact:b437e84762f1c2aa975f1f65",
+      "label": "casual"
+    },
+    {
+      "group_id": "exact:059c31c37ea36a5535bef233",
+      "label": "depression"
+    },
+    {
+      "group_id": "exact:165343ef4b38e4d24b99f7a7",
+      "label": "casual"
+    },
+    {
+      "group_id": "exact:c5d1e643a3bb856443ff908b",
+      "label": "casual"
+    },
+    {
+      "group_id": "exact:17eabc2a1fc1fa55146bef1c",
+      "label": "depression"
+    },
+    {
+      "group_id": "exact:1fe589bd66adaa942872a220",
+      "label": "depression"
+    },
+    {
+      "group_id": "exact:43bec9f275b9ff4205f78025",
+      "label": "neutral"
+    },
+    {
+      "group_id": "exact:e283f689154214c4e59bd2b8",
+      "label": "neutral"
+    },
+    {
+      "group_id": "exact:b437e84762f1c2aa975f1f65",
+      "label": "depression"
+    },
+    {
+      "group_id": "exact:059c31c37ea36a5535bef233",
+      "label": "casual"
+    },
+    {
+      "group_id": "exact:c5d1e643a3bb856443ff908b",
+      "label": "depression"
+    },
+    {
+      "group_id": "exact:1fe589bd66adaa942872a220",
+      "label": "neutral"
+    },
+    {
+      "group_id": "exact:43bec9f275b9ff4205f78025",
+      "label": "depression"
+    },
+    {
+      "group_id": "exact:d175fe66ed0eb21812c064ae",
+      "label": "depression"
+    },
+    {
+      "group_id": "exact:17eabc2a1fc1fa55146bef1c",
+      "label": "casual"
+    }
+  ],
+  "dataset": "dataset_a",
+  "duplicates": {
+    "conflicting_groups": 9,
+    "conflicting_rows": 58,
+    "duplicate_rows": 16555,
+    "exact_groups": 34126,
+    "rows": 50681
+  },
+  "path": "/home/mithon-hossain/projects/Mentalhealth/Data/data_2/final_balanced_5class_dataset.csv",
+  "sha256": "76bf4a04a48488800b11f7930ab04692993a0230426de73e4e295ff3a35d7c4b",
+  "text_words": {
+    "10%": 6.0,
+    "50%": 16.0,
+    "90%": 25.0,
+    "99%": 80.19999999999709,
+    "count": 50681.0,
+    "max": 2457.0,
+    "mean": 17.93962234367909,
+    "min": 1.0,
+    "std": 33.32987739251721
+  },
+  "unique_groups_by_class": {
+    "anxiety": 3324,
+    "casual": 10528,
+    "depression": 9899,
+    "neutral": 10020,
+    "suicidal": 366
+  },
+  "validation": {
+    "empty_text": 0,
+    "invalid_labels": {},
+    "missing_text": 47,
+    "rows_read": 50728,
+    "rows_valid": 50681
+  }
+}

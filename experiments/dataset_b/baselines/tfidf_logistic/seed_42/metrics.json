@@ -1,0 +1,33 @@
+{
+  "baseline": "tfidf_logistic",
+  "classification_report": {
+    "accuracy": 0.843345848977889,
+    "adhd": {
+      "f1-score": 0.8472645922310352,
+      "precision": 0.8262594208647362,
+      "recall": 0.8693656093489148,
+      "support": 2396.0
+    },
+    "macro avg": {
+      "f1-score": 0.8432426579224113,
+      "precision": 0.8442779726409031,
+      "recall": 0.8433566995868844,
+      "support": 4794.0
+    },
+    "ocd": {
+      "f1-score": 0.8392207236137872,
+      "precision": 0.8622965244170699,
+      "recall": 0.817347789824854,
+      "support": 2398.0
+    },
+    "weighted avg": {
+      "f1-score": 0.8432409800190702,
+      "precision": 0.8442854897672177,
+      "recall": 0.843345848977889,
+      "support": 4794.0
+    }
+  },
+  "dataset": "dataset_b",
+  "macro_f1": 0.8432426579224113,
+  "seed": 42
+}

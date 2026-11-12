@@ -1,0 +1,51 @@
+{
+  "baseline": "tfidf_svm",
+  "classification_report": {
+    "accuracy": 0.9579425556858148,
+    "anxiety": {
+      "f1-score": 0.9508196721311475,
+      "precision": 0.9886363636363636,
+      "recall": 0.9157894736842105,
+      "support": 665.0
+    },
+    "casual": {
+      "f1-score": 0.941415969237729,
+      "precision": 0.8981441519205869,
+      "recall": 0.9890684410646388,
+      "support": 2104.0
+    },
+    "depression": {
+      "f1-score": 0.9672727272727273,
+      "precision": 0.9946581196581197,
+      "recall": 0.9413549039433772,
+      "support": 1978.0
+    },
+    "macro avg": {
+      "f1-score": 0.9395842100622996,
+      "precision": 0.96328516504432,
+      "recall": 0.9204620425889635,
+      "support": 6824.0
+    },
+    "neutral": {
+      "f1-score": 0.9727410398788491,
+      "precision": 0.984167517875383,
+      "recall": 0.9615768463073853,
+      "support": 2004.0
+    },
+    "suicidal": {
+      "f1-score": 0.8656716417910447,
+      "precision": 0.9508196721311475,
+      "recall": 0.7945205479452054,
+      "support": 73.0
+    },
+    "weighted avg": {
+      "f1-score": 0.9582161209784306,
+      "precision": 0.9607640357606534,
+      "recall": 0.9579425556858148,
+      "support": 6824.0
+    }
+  },
+  "dataset": "dataset_a",
+  "macro_f1": 0.9395842100622996,
+  "seed": 42
+}

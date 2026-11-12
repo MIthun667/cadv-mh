@@ -1,0 +1,130 @@
+{
+  "accuracy": 0.3083235638921454,
+  "balanced_accuracy": 0.2,
+  "classification_report": {
+    "accuracy": 0.3083235638921454,
+    "anxiety": {
+      "f1-score": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "support": 665.0
+    },
+    "casual": {
+      "f1-score": 0.471326164874552,
+      "precision": 0.3083235638921454,
+      "recall": 1.0,
+      "support": 2104.0
+    },
+    "depression": {
+      "f1-score": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "support": 1978.0
+    },
+    "macro avg": {
+      "f1-score": 0.09426523297491039,
+      "precision": 0.061664712778429075,
+      "recall": 0.2,
+      "support": 6824.0
+    },
+    "neutral": {
+      "f1-score": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "support": 2004.0
+    },
+    "suicidal": {
+      "f1-score": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "support": 73.0
+    },
+    "weighted avg": {
+      "f1-score": 0.14532096290973878,
+      "precision": 0.09506342005115385,
+      "recall": 0.3083235638921454,
+      "support": 6824.0
+    }
+  },
+  "confusion_matrix": [
+    [
+      0,
+      0,
+      0,
+      0,
+      665
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      1978
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      73
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      2004
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      2104
+    ]
+  ],
+  "ece": 0.6916764361078547,
+  "macro_f1": 0.09426523297491039,
+  "majority_label": "casual",
+  "mcc": 0.0,
+  "multiclass_brier": 1.3833528722157094,
+  "negative_log_likelihood": 24.93054572049134,
+  "per_class": {
+    "anxiety": {
+      "auprc": 0.09745017584994138,
+      "f1": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "support": 665
+    },
+    "casual": {
+      "auprc": 0.3083235638921454,
+      "f1": 0.471326164874552,
+      "precision": 0.3083235638921454,
+      "recall": 1.0,
+      "support": 2104
+    },
+    "depression": {
+      "auprc": 0.2898593200468933,
+      "f1": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "support": 1978
+    },
+    "neutral": {
+      "auprc": 0.2936694021101993,
+      "f1": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "support": 2004
+    },
+    "suicidal": {
+      "auprc": 0.010697538100820633,
+      "f1": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "support": 73
+    }
+  },
+  "weighted_f1": 0.14532096290973878
+}

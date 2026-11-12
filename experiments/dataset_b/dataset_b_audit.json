@@ -1,0 +1,48 @@
+{
+  "class_counts": {
+    "adhd": 12000,
+    "ocd": 12000
+  },
+  "conflicting_group_examples": [
+    {
+      "group_id": "exact:488ff0c1f26dc4040ba578cf",
+      "label": "ocd"
+    },
+    {
+      "group_id": "exact:488ff0c1f26dc4040ba578cf",
+      "label": "adhd"
+    }
+  ],
+  "dataset": "dataset_b",
+  "duplicates": {
+    "conflicting_groups": 1,
+    "conflicting_rows": 3,
+    "duplicate_rows": 27,
+    "exact_groups": 23973,
+    "rows": 24000
+  },
+  "path": "/home/mithon-hossain/projects/Mentalhealth/Data/data_1/mental_health_reddit_posts.csv",
+  "sha256": "9cb46df7592942d280433baaf5f020ce3bc452f20f006d09382a374484fbcb65",
+  "text_words": {
+    "10%": 13.0,
+    "50%": 30.0,
+    "90%": 99.0,
+    "99%": 277.0,
+    "count": 24000.0,
+    "max": 1415.0,
+    "mean": 47.85579166666667,
+    "min": 1.0,
+    "std": 57.7179858091783
+  },
+  "unique_groups_by_class": {
+    "adhd": 11983,
+    "ocd": 11991
+  },
+  "validation": {
+    "empty_text": 0,
+    "invalid_labels": {},
+    "missing_text": 0,
+    "rows_read": 24000,
+    "rows_valid": 24000
+  }
+}

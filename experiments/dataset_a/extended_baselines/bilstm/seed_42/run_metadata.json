@@ -1,0 +1,41 @@
+{
+  "baseline": "bilstm",
+  "dataset": "dataset_a",
+  "hardware": {
+    "cuda_available": true,
+    "cuda_version": "12.6",
+    "gpu_memory_bytes": 12405768192,
+    "gpu_name": "NVIDIA GeForce RTX 2060",
+    "platform": "Linux-6.17.0-41-generic-x86_64-with-glibc2.42",
+    "python": "3.13.7 (main, Mar  3 2026, 12:19:54) [GCC 15.2.0]",
+    "torch": "2.10.0+cu126"
+  },
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.7330235770069452,
+      "validation_macro_f1": 0.7099580115873837
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.3463274248472977,
+      "validation_macro_f1": 0.8388427501655455
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.1997543718202047,
+      "validation_macro_f1": 0.849844982904628
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.09867389334073987,
+      "validation_macro_f1": 0.8744281660264
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.03893464424184846,
+      "validation_macro_f1": 0.8638221279967748
+    }
+  ],
+  "seed": 42
+}

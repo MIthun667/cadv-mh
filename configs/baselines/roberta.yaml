@@ -1,0 +1,3 @@
+baseline:
+  kind: transformer
+  encoder_name: roberta-base

@@ -1,0 +1,32 @@
+{
+  "config": "/home/mithon-hossain/projects/Mentalhealth/CADV-MH/configs/dataset_a.yaml",
+  "dataset": "dataset_a",
+  "git": {
+    "branch": null,
+    "revision": null,
+    "status": null
+  },
+  "hardware": {
+    "cuda_available": true,
+    "cuda_version": "12.6",
+    "gpu_memory_bytes": 12405768192,
+    "gpu_name": "NVIDIA GeForce RTX 2060",
+    "platform": "Linux-6.17.0-41-generic-x86_64-with-glibc2.42",
+    "python": "3.13.7 (main, Mar  3 2026, 12:19:54) [GCC 15.2.0]",
+    "torch": "2.10.0+cu126"
+  },
+  "partitions": {
+    "test": 6824,
+    "train": 23881,
+    "validation": 3412
+  },
+  "rows": 34117,
+  "seed": 42,
+  "train_class_counts": {
+    "anxiety": 2326,
+    "casual": 7364,
+    "depression": 6923,
+    "neutral": 7012,
+    "suicidal": 256
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "comprehensiveness_mean": 0.43233994044857715,
+  "dataset": "dataset_b",
+  "examples": 4794,
+  "method": "attention",
+  "model_dir": "/home/mithon-hossain/projects/Mentalhealth/CADV-MH/experiments/dataset_b/extended_baselines/roberta_base/seed_42/model",
+  "selection_ratio_mean": 0.1997882177960788,
+  "selection_ratio_target": 0.2,
+  "sufficiency_mean": 0.11218347456686985
+}

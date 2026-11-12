@@ -1,0 +1,10 @@
+{
+  "comprehensiveness_mean": 0.6776503486971504,
+  "dataset": "dataset_a",
+  "examples": 6824,
+  "method": "integrated_gradients",
+  "model_dir": "/home/mithon-hossain/projects/Mentalhealth/CADV-MH/experiments/dataset_a/extended_baselines/roberta_base/seed_42/model",
+  "selection_ratio_mean": 0.20079212881851796,
+  "selection_ratio_target": 0.2,
+  "sufficiency_mean": 0.014187405482021893
+}

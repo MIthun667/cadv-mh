@@ -1,0 +1,4 @@
+baseline:
+  kind: tfidf_svm
+  max_features: 100000
+  ngram_range: [1, 2]

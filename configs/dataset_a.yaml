@@ -1,0 +1,11 @@
+inherits: base.yaml
+dataset:
+  name: dataset_a
+  path: ../Data/data_2/final_balanced_5class_dataset.csv
+  text_column: text
+  label_column: label_name
+  id_column: null
+  labels: [anxiety, depression, suicidal, neutral, casual]
+  label_aliases:
+    suicide: suicidal
+  experiment_root: experiments/dataset_a

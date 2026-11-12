@@ -1,0 +1,47 @@
+{
+  "checkpoint": "/home/mithon-hossain/projects/Mentalhealth/CADV-MH/experiments/dataset_b/cadvmh/seed_42/best.pt",
+  "classwise": {
+    "adhd": {
+      "comprehensiveness": 0.016887063093370264,
+      "selection_ratio": 0.21096378502020852,
+      "sufficiency": 0.37842903960299573
+    },
+    "ocd": {
+      "comprehensiveness": 0.028879769153358707,
+      "selection_ratio": 0.21362400890714034,
+      "sufficiency": 0.18775611425588978
+    }
+  },
+  "dataset": "dataset_b",
+  "examples_evaluated": 4794,
+  "methods": {
+    "Attention": {
+      "comprehensiveness": 0.43233994044857715,
+      "selection_ratio": 0.1997882177960788,
+      "sufficiency": 0.11218347456686985
+    },
+    "CADV-MH": {
+      "comprehensiveness": 0.022885917730802948,
+      "selection_ratio": 0.21229445187061788,
+      "sufficiency": 0.28305280368677543
+    },
+    "Integrated gradients": {
+      "comprehensiveness": 0.21728253645552761,
+      "selection_ratio": 0.1997882177960788,
+      "sufficiency": 0.13174412539714467
+    }
+  },
+  "qualitative_examples": [
+    "dataset_b:11119:2ba7e74643182427",
+    "dataset_b:9305:35dc7f233d43f287",
+    "dataset_b:14526:69b3c0552ec187d9",
+    "dataset_b:22:018cf26bd5623d3f",
+    "dataset_b:8:7f185941f3a38626",
+    "dataset_b:160:180f0b612aec96ab",
+    "dataset_b:20456:4f2c8faccf35269a",
+    "dataset_b:19287:adbe05fcf3863997"
+  ],
+  "selection_mode": "top_rho",
+  "sparse_comparison_available": false,
+  "target_selection_ratio": 0.2
+}

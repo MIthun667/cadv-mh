@@ -1,0 +1,11 @@
+transfer:
+  source: dataset_a
+  target: dataset_b
+  direction: a_to_b
+  labels: [anxiety, depression, suicidal, normal]
+  dataset_a_mapping:
+    anxiety: anxiety
+    depression: depression
+    suicidal: suicidal
+    neutral: normal
+    casual: normal

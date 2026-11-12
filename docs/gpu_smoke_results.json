@@ -1,0 +1,29 @@
+{
+  "checkpoint_prediction_match": true,
+  "device": "cuda",
+  "gpu": "NVIDIA GeForce RTX 2060",
+  "rationale_selection_ratio": 0.20000000298023224,
+  "stages": {
+    "1": {
+      "finite": true,
+      "loss": 1.4720458984375,
+      "peak_allocated_bytes": 19928576,
+      "selector_gradient": false,
+      "trainable_parameters": 88132
+    },
+    "2": {
+      "finite": true,
+      "loss": 2.3977620601654053,
+      "peak_allocated_bytes": 20539904,
+      "selector_gradient": true,
+      "trainable_parameters": 8257
+    },
+    "3": {
+      "finite": true,
+      "loss": 3.1633851528167725,
+      "peak_allocated_bytes": 21277696,
+      "selector_gradient": true,
+      "trainable_parameters": 127657
+    }
+  }
+}

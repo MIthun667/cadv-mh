@@ -1,0 +1,54 @@
+project:
+  name: cadvmh
+  output_root: experiments
+  seed: 42
+data:
+  train_fraction: 0.70
+  validation_fraction: 0.10
+  test_fraction: 0.20
+  split_seed: 42
+  encoding: latin1
+  deduplicate_primary: true
+  near_duplicate:
+    enabled: false
+    char_ngram: 5
+    threshold: 0.92
+model:
+  encoder_name: roberta-base
+  max_length: 128
+  pooling_dropout: 0.1
+  selector_hidden_dim: 256
+  selector_dropout: 0.1
+  interaction_dim: 768
+  residual_dropout: 0.1
+  selection_mode: soft
+  selection_ratio: 0.20
+  selection_threshold: 0.50
+  temperature_initial: 1.0
+  temperature_final: 0.3
+  gradient_checkpointing: true
+  comparison_mode: full
+training:
+  microbatch_size: 4
+  gradient_accumulation: 4
+  encoder_learning_rate: 0.00002
+  stage3_encoder_learning_rate: 0.00001
+  selector_learning_rate: 0.00005
+  module_learning_rate: 0.0001
+  weight_decay: 0.01
+  gradient_clip: 1.0
+  fp16: true
+  patience: 2
+  beta: 0.999
+  stage1_epochs: 2
+  stage2_epochs: 2
+  stage3_epochs: 5
+loss:
+  classification: 1.0
+  original: 0.5
+  necessity: 0.5
+  sufficiency: 0.5
+  sparsity: 0.05
+  continuity: 0.05
+  consistency: 0.1
+  necessity_margin: 0.2
