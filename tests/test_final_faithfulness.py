@@ -34,6 +34,11 @@ def test_final_faithfulness_reruns_the_whole_model_on_edited_ids(tiny_model, tin
 def test_final_faithfulness_uses_final_head_not_auxiliary_head(tiny_model, tiny_batch):
     tiny_model.eval()
     kwargs = dict(generator=torch.Generator().manual_seed(0))
+    # Non-degenerate final head regardless of the random tiny-model init (the fixture is unseeded).
+    torch.manual_seed(0)
+    with torch.no_grad():
+        for p in tiny_model.final_head.parameters():
+            p.normal_(0, 2.0)
     before = final_mechanism_faithfulness(tiny_model, _batch(tiny_batch), 4, 0.5, **kwargs)["predicted_comprehensiveness"]
     with torch.no_grad():  # perturbing only the auxiliary head must not change a final-mechanism metric
         for p in tiny_model.auxiliary_head.parameters():
@@ -42,7 +47,7 @@ def test_final_faithfulness_uses_final_head_not_auxiliary_head(tiny_model, tiny_
     assert torch.allclose(before, after)
     with torch.no_grad():
         for p in tiny_model.final_head.parameters():
-            p.add_(5.0)
+            p.normal_(0, 2.0)
     changed = final_mechanism_faithfulness(tiny_model, _batch(tiny_batch), 4, 0.5, **kwargs)["predicted_comprehensiveness"]
     assert not torch.allclose(before, changed)
 
