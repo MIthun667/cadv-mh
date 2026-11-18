@@ -11,3 +11,44 @@ experiments/**/predictions/
 prepared/
 experiments_v2/**/*.pt
 experiments_v2/**/*.safetensors
+
+# Generated research outputs
+results/
+result/
+figures/
+figure/
+plots/
+plot/
+outputs/
+output/
+checkpoints/
+experiments_v2/
+
+# Model checkpoints
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+
+# Generated figures
+*.png
+*.jpg
+*.jpeg
+*.svg
+*.pdf
+*.eps
+
+# Experiment outputs
+*.npy
+*.npz
+*.pkl
+*.pickle
+*.csv
+*.tsv
+
+# Local environments and caches
+.venv/
+venv/
+__pycache__/
+.pytest_cache/
+.ipynb_checkpoints/
